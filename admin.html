@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Espace Médias Client | Clarisse Bonneu</title>
+    <meta
+      name="description"
+      content="Espace médias sécurisé permettant aux clients et aux agences de déposer, organiser et enrichir les contenus du portfolio Clarisse Bonneu."
+    />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="supabase-url" content="%VITE_SUPABASE_URL%" />
+    <meta name="supabase-publishable-key" content="%VITE_SUPABASE_PUBLISHABLE_KEY%" />
+    <meta name="cloudinary-cloud-name" content="%VITE_CLOUDINARY_CLOUD_NAME%" />
+    <meta name="cloudinary-api-key" content="%VITE_CLOUDINARY_API_KEY%" />
+    <meta name="cloudinary-root" content="%VITE_PORTFOLIO_ROOT%" />
+    <script src="https://upload-widget.cloudinary.com/latest/global/all.js" defer></script>
+    <link rel="stylesheet" href="/src/css/global.css?v=admin-refresh-20260628-2" />
+    <script type="module" src="/src/js/admin.js?v=admin-refresh-20260628-2"></script>
+  </head>
+  <body class="site-shell bg-zinc-950 text-zinc-200 antialiased">
+    <main class="page-main admin-page" id="content">
+      <section class="container admin-hero" data-admin-hero aria-labelledby="page-title">
+        <div class="admin-hero__copy">
+          <p class="eyebrow">Espace sécurisé</p>
+          <h1 id="page-title">Gestion des médias du portfolio</h1>
+          <p>Ajoutez, organisez et mettez à jour les photos et vidéos du portfolio.</p>
+        </div>
+        <div class="admin-hero__links">
+          <a class="button-outline" href="/portfolio.html" data-admin-public-link>Voir le portfolio actif</a>
+          <a class="button-outline" href="/index.html">Retour au site</a>
+          <div class="admin-hero__icon-actions" data-admin-shell-quick-actions hidden aria-label="Actions rapides">
+            <button class="button-outline admin-icon-button" type="button" data-admin-manage-mfa aria-label="Sécurité 2FA" title="Sécurité 2FA">
+              <i data-lucide="shield" aria-hidden="true"></i>
+            </button>
+            <button class="button-outline admin-icon-button" type="button" data-admin-refresh aria-label="Actualiser" title="Actualiser">
+              <i data-lucide="refresh-cw" aria-hidden="true"></i>
+            </button>
+            <button class="button-outline admin-icon-button" type="button" data-admin-signout aria-label="Se déconnecter" title="Se déconnecter">
+              <i data-lucide="log-out" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="container admin-status-wrap" data-admin-status-wrap aria-live="polite">
+        <p class="admin-status" data-admin-status data-state="info">
+          Initialisation de l'espace médias...
+        </p>
+      </section>
+
+      <section class="container admin-auth" data-admin-auth>
+        <section class="admin-auth-layout" aria-labelledby="admin-login-title">
+          <article class="contact-panel admin-panel admin-auth-card admin-auth-card--intro" data-admin-login-intro>
+            <p class="contact-panel__eyebrow">Espace client</p>
+            <h2>Un accès simple, guidé et sécurisé</h2>
+            <p class="contact-panel__lead">
+              Tout est pensé pour une utilisation non technique : choisir un dossier, envoyer un contenu, puis vérifier le résultat.
+            </p>
+            <ul class="admin-auth-list">
+              <li>Connexion sécurisée par email, mot de passe et 2FA</li>
+              <li>Ajout de photos et vidéos sans manipulation complexe</li>
+              <li>Dossiers, filtres et contrôles pensés pour aller à l’essentiel</li>
+              <li>Interface adaptée ordinateur et mobile</li>
+            </ul>
+          </article>
+
+          <section
+            class="contact-panel admin-panel admin-panel--auth admin-auth-card"
+            data-admin-login-card
+            aria-labelledby="admin-login-title"
+          >
+            <p class="contact-panel__eyebrow">Connexion</p>
+            <h2 id="admin-login-title">Accéder à l’espace médias</h2>
+            <p class="contact-panel__lead">
+              Connectez-vous avec vos identifiants. Si la double authentification est active, l’étape suivante vous sera proposée automatiquement.
+            </p>
+
+            <form class="admin-form" data-admin-login-form>
+              <label class="contact-field contact-field--full">
+                <span>Email</span>
+                <input type="email" name="email" autocomplete="email" required data-admin-email-input />
+              </label>
+
+              <label class="contact-field contact-field--full">
+                <span>Mot de passe</span>
+                <input type="password" name="password" autocomplete="current-password" required />
+              </label>
+
+              <div class="admin-form__actions">
+                <button class="button-outline admin-primary-button" type="submit">Se connecter</button>
+                <button class="button-outline" type="button" data-admin-reset-password>Mot de passe oublié</button>
+              </div>
+            </form>
+          </section>
+
+          <section
+            class="contact-panel admin-panel admin-panel--auth admin-auth-card admin-auth-card--password"
+            data-admin-password-gate
+            hidden
+            aria-labelledby="admin-password-title"
+          >
+            <p class="contact-panel__eyebrow" data-admin-password-eyebrow>Accès sécurisé</p>
+            <h2 id="admin-password-title" data-admin-password-title>Définir votre mot de passe</h2>
+            <p class="contact-panel__lead" data-admin-password-description>
+              Choisissez maintenant votre mot de passe. L’étape 2FA s’ouvrira juste après pour sécuriser l’accès.
+            </p>
+
+            <div class="admin-auth-highlight" data-admin-password-highlight>
+              Le lien reçu par email sécurise cette étape. Une fois le mot de passe enregistré, l’accès 2FA sera proposé automatiquement.
+            </div>
+
+            <form class="admin-form" data-admin-password-form>
+              <label class="contact-field contact-field--full">
+                <span>Nouveau mot de passe</span>
+                <input
+                  type="password"
+                  name="password"
+                  autocomplete="new-password"
+                  required
+                  minlength="8"
+                  data-admin-password-input
+                />
+              </label>
+
+              <label class="contact-field contact-field--full">
+                <span>Confirmer le mot de passe</span>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  autocomplete="new-password"
+                  required
+                  minlength="8"
+                  data-admin-password-confirm-input
+                />
+              </label>
+
+              <p class="admin-help" data-admin-password-help>
+                Utilisez au minimum 8 caractères. Après validation, vous serez guidé vers la sécurité 2FA puis l’espace admin.
+              </p>
+
+              <div class="admin-form__actions">
+                <button class="button-outline admin-primary-button" type="submit" data-admin-password-submit>
+                  Valider le mot de passe
+                </button>
+                <button class="button-outline" type="button" data-admin-password-cancel>Annuler</button>
+              </div>
+            </form>
+          </section>
+
+          <section
+            class="contact-panel admin-panel admin-panel--auth admin-auth-card admin-auth-card--mfa"
+            data-admin-mfa-gate
+            hidden
+            aria-labelledby="admin-mfa-title"
+          >
+            <h2 id="admin-mfa-title" class="admin-mfa-title" data-admin-mfa-title>Validation 2FA</h2>
+
+            <div class="admin-mfa-factor-list" data-admin-mfa-factor-list hidden></div>
+
+            <form class="admin-form" data-admin-mfa-challenge-form hidden>
+              <label class="contact-field contact-field--full admin-pin-field">
+                <span>Code à 6 chiffres</span>
+                <div class="admin-pin-input" data-admin-pin-input>
+                  <input
+                    type="text"
+                    name="code"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    placeholder="123456"
+                    maxlength="6"
+                    pattern="[0-9]*"
+                    data-admin-pin-source
+                  />
+                  <div class="admin-pin-input__slots" aria-hidden="true">
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                  </div>
+                </div>
+              </label>
+
+              <div class="admin-form__actions">
+                <button class="button-outline admin-primary-button" type="submit">Valider le code</button>
+                <button class="button-outline" type="button" data-admin-mfa-cancel-challenge>Retour</button>
+              </div>
+            </form>
+
+            <form class="admin-form" data-admin-mfa-enroll-form hidden>
+              <label class="contact-field contact-field--full">
+                <span>Nom de l'appareil</span>
+                <input
+                  type="text"
+                  name="friendlyName"
+                  autocomplete="off"
+                  placeholder="iPhone d'Angelo, 1Password, Authy..."
+                />
+              </label>
+
+              <div class="admin-mfa-qr-wrap" data-admin-mfa-qr-wrap hidden>
+                <div class="admin-mfa-qr-card">
+                  <img data-admin-mfa-qr-image alt="QR code de configuration 2FA" />
+                </div>
+
+                <label class="contact-field contact-field--full">
+                  <span>Secret manuel</span>
+                  <input type="text" readonly data-admin-mfa-secret />
+                </label>
+              </div>
+
+              <label class="contact-field contact-field--full admin-pin-field" data-admin-mfa-code-wrap hidden>
+                <span>Code de verification</span>
+                <div class="admin-pin-input" data-admin-pin-input>
+                  <input
+                    type="text"
+                    name="code"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    placeholder="123456"
+                    maxlength="6"
+                    pattern="[0-9]*"
+                    data-admin-pin-source
+                  />
+                  <div class="admin-pin-input__slots" aria-hidden="true">
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                    <span class="admin-pin-input__slot" data-admin-pin-slot></span>
+                  </div>
+                </div>
+              </label>
+
+              <div class="admin-form__actions">
+                <button class="button-outline admin-primary-button" type="button" data-admin-mfa-start-enroll>Configurer la 2FA</button>
+                <button class="button-outline admin-primary-button" type="submit" data-admin-mfa-verify-enroll hidden>Activer la 2FA</button>
+                <button class="button-outline" type="button" data-admin-mfa-reset-current hidden>Reinitialiser ma 2FA</button>
+                <button class="button-outline" type="button" data-admin-mfa-skip hidden>Plus tard</button>
+                <button class="button-outline" type="button" data-admin-mfa-cancel-enroll hidden>Retour</button>
+              </div>
+            </form>
+          </section>
+        </section>
+      </section>
+
+      <section class="container admin-shell" data-admin-shell hidden>
+        <section class="admin-shell-nav admin-panel" aria-label="Navigation de l’administration">
+          <div class="admin-shell-nav__header">
+            <p class="contact-panel__eyebrow">Navigation</p>
+            <h2 class="admin-shell-nav__title">Choisissez un volet</h2>
+            <p class="admin-section-intro">
+              Travaillez depuis la bibliothèque, puis passez aux accès et aux logs si besoin.
+            </p>
+          </div>
+          <div class="admin-shell-nav__buttons" role="tablist" aria-label="Volets de l'administration">
+            <button class="admin-pane-button is-active" type="button" role="tab" aria-selected="true" data-admin-pane-button="library">
+              Bibliothèque
+            </button>
+            <button class="admin-pane-button" type="button" role="tab" aria-selected="false" data-admin-pane-button="access">
+              Accès clients
+            </button>
+            <button class="admin-pane-button" type="button" role="tab" aria-selected="false" data-admin-pane-button="logs">
+              Logs
+            </button>
+          </div>
+        </section>
+
+        <section class="admin-shell-layout" aria-label="Espace de travail médias">
+          <div class="admin-shell-main" data-admin-shell-main>
+            <section class="admin-studio admin-panel" data-admin-studio-panel aria-labelledby="admin-studio-title">
+              <div class="admin-panel__header">
+                <div>
+                  <h2 id="admin-studio-title">Dossiers du portfolio</h2>
+                  <p class="admin-help" data-admin-active-portfolio-label>Chargement du portfolio actif...</p>
+                </div>
+              </div>
+
+              <div class="admin-studio__grid">
+                <section class="admin-stage-card admin-stage-card--folders" aria-label="Dossiers du portfolio">
+                  <div class="admin-shell-nav__buttons" role="tablist" aria-label="Choisir le portfolio actif" data-admin-portfolio-switcher></div>
+                  <div class="admin-explorer-toolbar">
+                    <form class="admin-explorer-search" data-admin-folder-search-form>
+                      <label class="contact-field contact-field--full admin-search-label">
+                        <div class="admin-explorer-search__box">
+                          <div class="admin-explorer-search__field" data-admin-folder-search-field>
+                            <i class="admin-explorer-search__icon" data-lucide="search" aria-hidden="true"></i>
+                            <input
+                              type="search"
+                              name="folderSearch"
+                              autocomplete="off"
+                              aria-label="Rechercher un dossier"
+                              aria-controls="admin-folder-search-results"
+                              aria-expanded="false"
+                              aria-autocomplete="list"
+                              placeholder="Rechercher un dossier..."
+                              data-admin-folder-search
+                            />
+                            <button
+                              class="button-outline admin-explorer-search__clear"
+                              type="button"
+                              data-admin-clear-folder-search
+                              aria-label="Vider la recherche"
+                              title="Vider la recherche"
+                              hidden
+                            >
+                              <i data-lucide="x" aria-hidden="true"></i>
+                            </button>
+                          </div>
+                          <div
+                            class="admin-explorer-search__results"
+                            id="admin-folder-search-results"
+                            data-admin-folder-suggestions-panel
+                            hidden
+                          ></div>
+                        </div>
+                      </label>
+                    </form>
+                    <div class="admin-explorer-toolbar__actions" aria-label="Actions dossiers">
+                      <button class="button-outline" type="button" data-admin-open-folder-dialog="create">
+                        <i data-lucide="folder-plus" aria-hidden="true"></i>
+                        <span>Nouveau</span>
+                      </button>
+                    </div>
+                  </div>
+                  <p class="admin-folder-reorder-hint">
+                    Cliquez pour ouvrir un dossier. Maintenez puis glissez une carte pour réorganiser les dossiers.
+                  </p>
+
+                  <div class="admin-folder-list admin-folder-list--explorer" data-admin-folder-list></div>
+                </section>
+              </div>
+            </section>
+
+            <dialog class="admin-folder-dialog" data-admin-folder-dialog aria-labelledby="admin-folder-dialog-title" aria-hidden="true">
+              <header class="admin-folder-dialog__header">
+                <p class="contact-panel__eyebrow" data-admin-folder-dialog-eyebrow hidden>Dossier</p>
+                <h3 id="admin-folder-dialog-title" data-admin-folder-dialog-title>Créer un dossier</h3>
+                <p class="admin-help" data-admin-folder-dialog-description>Donnez un nom simple et clair au dossier.</p>
+                <button class="button-outline admin-inline-button admin-folder-dialog__close" type="button" data-admin-close-folder-dialog>Fermer</button>
+              </header>
+
+              <form class="admin-form admin-form--compact admin-folder-dialog__form" data-admin-create-folder-form>
+                <label class="contact-field contact-field--full">
+                  <span data-admin-folder-dialog-label>Nom du dossier</span>
+                  <input
+                    type="text"
+                    name="folderName"
+                    autocomplete="off"
+                    required
+                    placeholder="ex. Pola, beaute, editorial"
+                    data-admin-folder-dialog-input
+                  />
+                </label>
+                <div class="admin-form__actions admin-folder-dialog__actions">
+                  <button class="button-outline" type="button" data-admin-close-folder-dialog>Annuler</button>
+                  <button class="button-outline admin-primary-button" type="submit" data-admin-folder-dialog-submit>Créer</button>
+                </div>
+              </form>
+            </dialog>
+
+            <dialog class="admin-folder-dialog" data-admin-reset-password-dialog aria-labelledby="admin-reset-password-dialog-title" aria-hidden="true">
+              <header class="admin-folder-dialog__header">
+                <p class="contact-panel__eyebrow">Sécurité</p>
+                <h3 id="admin-reset-password-dialog-title">Mot de passe temporaire généré</h3>
+                <p class="admin-help">Partagez ce mot de passe temporaire au client. Lors de sa prochaine connexion, il devra définir un nouveau mot de passe avant la 2FA.</p>
+                <button class="button-outline admin-inline-button admin-folder-dialog__close" type="button" data-admin-close-reset-password-dialog>Fermer</button>
+              </header>
+
+              <div class="admin-form admin-form--compact admin-folder-dialog__form">
+                <label class="contact-field contact-field--full">
+                  <span>Mot de passe temporaire</span>
+                  <input type="text" readonly data-admin-reset-password-output />
+                </label>
+                <div class="admin-form__actions admin-folder-dialog__actions">
+                  <button class="button-outline" type="button" data-admin-copy-reset-password>Copier</button>
+                  <button class="button-outline admin-primary-button" type="button" data-admin-close-reset-password-dialog>Terminer</button>
+                </div>
+              </div>
+            </dialog>
+
+            <section class="admin-panel admin-panel--assets" data-admin-library-panel aria-label="Bibliothèque du dossier">
+              <section class="admin-library-summary" data-admin-library-summary hidden>
+                <div class="admin-library-summary__heading">
+                  <h3 class="admin-library-summary__title" data-admin-library-title tabindex="0">Dossier sélectionné</h3>
+                  <div class="admin-library-summary__rename-actions" data-admin-rename-actions hidden>
+                    <button class="button-outline admin-icon-button" type="button" data-admin-clear-folder-rename aria-label="Vider la saisie" title="Vider la saisie">
+                      <i data-lucide="x" aria-hidden="true"></i>
+                    </button>
+                    <button class="button-outline admin-primary-button admin-icon-button" type="button" data-admin-submit-folder-rename aria-label="Valider le nom" title="Valider le nom">
+                      <i data-lucide="check" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="admin-library-summary__actions">
+                  <button class="button-outline admin-icon-button" type="button" data-admin-back-to-folders aria-label="Retour aux dossiers" title="Retour aux dossiers">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m12 19-7-7 7-7"></path>
+                      <path d="M19 12H5"></path>
+                    </svg>
+                  </button>
+                  <button class="button-outline admin-icon-button" type="button" data-admin-start-folder-rename aria-label="Renommer le dossier" title="Renommer le dossier" hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path>
+                      <path d="m15 5 4 4"></path>
+                    </svg>
+                  </button>
+                  <button class="button-outline admin-primary-button admin-icon-button" type="button" data-admin-open-add-menu aria-label="Ajouter un media" title="Ajouter un media" aria-haspopup="true" aria-expanded="false" hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M5 12h14"></path>
+                      <path d="M12 5v14"></path>
+                    </svg>
+                  </button>
+                  <button class="button-outline admin-icon-button" type="button" data-admin-move-folder-to-portfolio aria-label="Deplacer le dossier vers l autre portfolio" title="Deplacer le dossier vers l autre portfolio" hidden>
+                    <i data-lucide="folder-symlink" aria-hidden="true"></i>
+                  </button>
+                  <button class="button-outline admin-danger-button admin-icon-button" type="button" data-admin-delete-folder aria-label="Supprimer le dossier" title="Supprimer le dossier" hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M10 11v6"></path>
+                      <path d="M14 11v6"></path>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                      <path d="M3 6h18"></path>
+                      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                  <section class="admin-add-menu" data-admin-add-menu hidden aria-label="Choisir le type d ajout">
+                    <button class="admin-add-menu__option" type="button" data-admin-add-kind="photo" aria-label="Ajouter une image" title="Ajouter une image">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"></path>
+                        <circle cx="12" cy="13" r="3"></circle>
+                      </svg>
+                    </button>
+                    <button class="admin-add-menu__option" type="button" data-admin-add-kind="video" aria-label="Ajouter une video" title="Ajouter une video">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                        <path d="M7 3v18"></path>
+                        <path d="M3 7.5h4"></path>
+                        <path d="M3 12h18"></path>
+                        <path d="M3 16.5h4"></path>
+                        <path d="M17 3v18"></path>
+                        <path d="M17 7.5h4"></path>
+                        <path d="M17 16.5h4"></path>
+                      </svg>
+                    </button>
+                  </section>
+                </div>
+              </section>
+
+              <section
+                class="admin-stage-card admin-stage-card--accent admin-add-stage"
+                aria-labelledby="admin-upload-title"
+                data-admin-media-stage
+                hidden
+              >
+                <div class="admin-stage-card__header admin-add-stage__header">
+                  <div class="admin-add-stage__topbar">
+                    <button class="button-outline admin-icon-button" type="button" data-admin-close-add-stage aria-label="Retour a la bibliotheque" title="Retour a la bibliotheque">
+                      <i data-lucide="arrow-left" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <h3 id="admin-upload-title" data-admin-upload-title>Ajouter dans ce dossier</h3>
+                </div>
+
+                <form class="admin-form admin-add-stage__form" data-admin-media-form>
+                  <input type="hidden" name="mediaKind" value="photo" data-admin-media-kind-input />
+
+                  <div class="admin-add-stage__hero">
+                    <div class="admin-add-stage__folder-pill">
+                      <i data-lucide="folder-open" aria-hidden="true"></i>
+                      <input type="text" name="folder" readonly data-admin-upload-folder data-admin-media-folder />
+                    </div>
+                    <p class="admin-add-stage__note" data-admin-guidance-copy>
+                      <strong>Image :</strong> préparez le média puis ouvrez l'import.
+                    </p>
+                  </div>
+
+                  <div class="admin-add-stage__fields">
+                    <label class="contact-field contact-field--full">
+                      <span data-admin-media-title-label>Nom visible</span>
+                      <input type="text" name="altFr" autocomplete="off" placeholder="Nom ou description visible côté site" data-admin-media-title-input />
+                    </label>
+
+                    <label class="contact-field contact-field--full" data-admin-video-url-field hidden>
+                      <span>Lien YouTube</span>
+                      <input
+                        type="url"
+                        name="videoUrl"
+                        autocomplete="off"
+                        inputmode="url"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        data-admin-video-url-input
+                      />
+                    </label>
+
+                    <label class="contact-field contact-field--full">
+                      <span>Tags</span>
+                      <input type="text" name="tags" autocomplete="off" placeholder="editorial, cover, campagne" />
+                    </label>
+                  </div>
+
+                  <input type="hidden" name="altEn" value="" />
+
+                  <div class="admin-form__actions">
+                    <button class="button-outline admin-primary-button" type="submit" data-admin-media-submit>
+                      Ouvrir l'import image
+                    </button>
+                  </div>
+                </form>
+              </section>
+
+              <div class="admin-guidance-card" data-admin-library-gate>
+                <strong>Ouvrez un dossier.</strong>
+                <p class="admin-help">Choisissez un dossier pour voir ses médias, les réordonner et en ajouter.</p>
+              </div>
+
+              <section class="admin-library-filters" data-admin-library-controls hidden>
+                <label class="contact-field contact-field--full admin-filter-search">
+                  <input type="search" autocomplete="off" placeholder="Rechercher un média..." data-admin-search />
+                </label>
+
+                <div class="contact-field contact-field--full admin-filter-type">
+                  <input type="hidden" value="all" data-admin-filter-type-input />
+                  <div class="admin-choice-group admin-choice-group--compact" role="group" aria-label="Filtrer les médias" data-admin-filter-type-buttons>
+                    <button class="admin-choice-chip is-active" type="button" data-value="all">Tous</button>
+                    <button class="admin-choice-chip" type="button" data-value="image">Photos</button>
+                    <button class="admin-choice-chip" type="button" data-value="video">Vidéos</button>
+                  </div>
+                </div>
+
+                <label class="contact-field admin-filter-tag">
+                  <input type="search" autocomplete="off" placeholder="Filtrer par tag..." data-admin-filter-tag />
+                </label>
+
+                <div class="admin-library-filters__actions">
+                  <button class="button-outline" type="button" data-admin-toggle-selected-only>
+                    <i data-lucide="list-filter" aria-hidden="true"></i>
+                    <span>Sélection</span>
+                  </button>
+                  <button class="button-outline" type="button" data-admin-clear-filters>
+                    <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+                    <span>Reset</span>
+                  </button>
+                </div>
+              </section>
+
+              <section class="admin-library-toolbar" data-admin-library-controls hidden>
+                <div class="admin-library-toolbar__left">
+                  <button class="button-outline" type="button" data-admin-select-all>
+                    <i data-lucide="check-check" aria-hidden="true"></i>
+                    <span>Tout</span>
+                  </button>
+                  <button class="button-outline" type="button" data-admin-clear-selection>
+                    <i data-lucide="square" aria-hidden="true"></i>
+                    <span>Vider</span>
+                  </button>
+                  <strong class="admin-selection-count" data-admin-selection-count>0 média sélectionné</strong>
+                </div>
+              </section>
+
+              <div class="admin-selection-dock" data-admin-selection-dock hidden>
+                <div>
+                  <strong data-admin-selection-dock-count>0 média sélectionné</strong>
+                  <p class="admin-help">Ouvrez rapidement un média de la sélection ou videz-la en un clic.</p>
+                </div>
+                <div class="admin-selection-dock__actions">
+                  <button class="button-outline" type="button" data-admin-preview-selection>Ouvrir le premier sélectionné</button>
+                  <button class="button-outline" type="button" data-admin-clear-selection-dock>Vider la sélection</button>
+                </div>
+              </div>
+
+              <form class="admin-form admin-bulk-form" data-admin-bulk-form hidden>
+                <label class="contact-field">
+                  <input type="text" name="alt" autocomplete="off" placeholder="Alt FR sélection" />
+                </label>
+
+                <label class="contact-field">
+                  <input type="text" name="altEn" autocomplete="off" placeholder="Alt EN sélection" />
+                </label>
+
+                <label class="contact-field">
+                  <input type="text" name="tags" autocomplete="off" placeholder="Tags sélection" />
+                </label>
+
+                <div class="admin-form__actions">
+                  <button class="button-outline admin-primary-button" type="submit">Appliquer</button>
+                </div>
+              </form>
+
+              <p class="admin-empty" data-admin-assets-empty hidden>Aucun média dans ce dossier pour le moment.</p>
+              <div class="admin-asset-grid" data-admin-asset-grid></div>
+              <section class="admin-asset-menu" data-admin-asset-menu hidden aria-label="Actions du media">
+                <button class="button-outline" type="button" data-admin-asset-menu-action="preview">
+                  <i data-lucide="search" aria-hidden="true"></i>
+                  <span>Aperçu</span>
+                </button>
+                <button class="button-outline" type="button" data-admin-asset-menu-action="edit">
+                  <i data-lucide="pencil" aria-hidden="true"></i>
+                  <span>Modifier</span>
+                </button>
+                <button class="button-outline" type="button" data-admin-asset-menu-action="open">
+                  <i data-lucide="folder-open" aria-hidden="true"></i>
+                  <span>Ouvrir</span>
+                </button>
+                <button class="button-outline" type="button" data-admin-asset-menu-action="select">
+                  <i data-lucide="check-check" aria-hidden="true"></i>
+                  <span>Sélectionner</span>
+                </button>
+                <button class="button-outline admin-danger-button" type="button" data-admin-asset-menu-action="delete">
+                  <i data-lucide="trash-2" aria-hidden="true"></i>
+                  <span>Supprimer</span>
+                </button>
+              </section>
+              <div class="admin-library-footer" data-admin-pagination hidden>
+                <p class="admin-help" data-admin-pagination-label></p>
+                <button class="button-outline" type="button" data-admin-load-more>Afficher plus</button>
+              </div>
+            </section>
+          </div>
+
+          <aside class="admin-shell-sidebar" data-admin-shell-sidebar>
+            <section class="admin-panel admin-users-panel" data-admin-users-panel hidden aria-labelledby="admin-users-title">
+              <div class="admin-panel__header">
+                <div>
+                  <p class="contact-panel__eyebrow">Comptes</p>
+                  <h2 id="admin-users-title">Gérer les accès</h2>
+                  <p class="admin-section-intro">
+                    Créez un accès, choisissez le rôle puis gérez les actions sensibles depuis cette seule vue.
+                  </p>
+                </div>
+              </div>
+
+              <form class="admin-form admin-users-form" data-admin-user-form>
+                <div class="admin-users-form__grid contact-field--full">
+                  <label class="contact-field">
+                    <span>Email du compte</span>
+                    <input type="email" name="email" autocomplete="off" required placeholder="client@exemple.fr" />
+                  </label>
+
+                  <label class="contact-field">
+                    <span>Nom affiché</span>
+                    <input type="text" name="displayName" autocomplete="off" placeholder="Agence ou client" />
+                  </label>
+
+                  <label class="contact-field contact-field--full">
+                    <span>Mot de passe (optionnel)</span>
+                    <input type="password" name="password" autocomplete="new-password" placeholder="Laissez vide pour envoyer une invitation" />
+                  </label>
+                </div>
+
+                <div class="contact-field contact-field--full admin-users-form__role">
+                  <div class="admin-users-form__role-copy">
+                    <span>Rôle du compte</span>
+                    <p class="admin-help admin-users-form__role-help">Choisissez le niveau d'accès dès l'invitation. Le rôle pourra être ajusté plus tard si besoin.</p>
+                  </div>
+                  <input type="hidden" name="role" value="client" data-admin-user-role-input />
+                  <div class="admin-choice-group" role="group" aria-label="Role du compte" data-admin-user-role-buttons>
+                    <button class="admin-choice-chip is-active" type="button" data-value="client">Utilisateur</button>
+                    <button class="admin-choice-chip" type="button" data-value="admin">Admin</button>
+                  </div>
+                </div>
+
+                <div class="admin-users-form__footer contact-field--full">
+                  <p class="admin-help admin-users-form__help">Si vous laissez le mot de passe vide, le compte reçoit un email d'invitation. Si vous renseignez un mot de passe, le compte est créé immédiatement (sans email) et pourra configurer la 2FA lors de sa première connexion.</p>
+                  <div class="admin-form__actions admin-users-form__actions">
+                    <button class="button-outline admin-primary-button" type="submit">Créer le compte</button>
+                  </div>
+                </div>
+              </form>
+
+              <div class="admin-help" data-admin-user-link-wrap hidden>
+                <strong data-admin-user-link-label>Accès généré :</strong>
+                <div class="admin-generated-link">
+                  <input type="text" readonly data-admin-user-link-output />
+                  <button class="button-outline" type="button" data-admin-copy-user-link>Copier</button>
+                </div>
+              </div>
+
+              <div class="admin-user-list" data-admin-user-list></div>
+            </section>
+
+            <section class="admin-panel admin-logs-panel" data-admin-logs-panel hidden aria-labelledby="admin-logs-title">
+              <div class="admin-panel__header">
+                <div>
+                  <p class="contact-panel__eyebrow">Historique</p>
+                  <h2 id="admin-logs-title">Logs d’activité</h2>
+                  <p class="admin-section-intro">Connexions, créations de comptes, suppressions, reset 2FA et autres actions sensibles.</p>
+                </div>
+              </div>
+              <div class="admin-logs-toolbar">
+                <button class="button-outline" type="button" data-admin-refresh-logs>
+                  <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                  <span>Actualiser</span>
+                </button>
+                <button class="button-outline admin-danger-button" type="button" data-admin-clear-logs>
+                  <i data-lucide="trash-2" aria-hidden="true"></i>
+                  <span>Vider les logs</span>
+                </button>
+              </div>
+              <form class="admin-logs-filters" data-admin-logs-filters-form>
+                <label class="contact-field">
+                  <span>Action</span>
+                  <div class="admin-select" data-admin-logs-action-picker>
+                    <select data-admin-logs-action hidden>
+                      <option value="">Toutes les actions</option>
+                    </select>
+                    <button class="admin-select__trigger" type="button" data-admin-logs-action-trigger aria-haspopup="listbox" aria-expanded="false">
+                      <span data-admin-logs-action-label>Toutes les actions</span>
+                    </button>
+                    <div class="admin-select__menu" data-admin-logs-action-menu hidden role="listbox" aria-label="Filtrer les logs par action"></div>
+                  </div>
+                </label>
+                <label class="contact-field">
+                  <span>Email</span>
+                  <input type="search" autocomplete="off" placeholder="contact@exemple.fr" data-admin-logs-email />
+                </label>
+                <label class="contact-field">
+                  <span>Date début</span>
+                  <input type="text" autocomplete="off" placeholder="Choisir une date" data-admin-logs-date-from />
+                </label>
+                <label class="contact-field">
+                  <span>Date fin</span>
+                  <input type="text" autocomplete="off" placeholder="Choisir une date" data-admin-logs-date-to />
+                </label>
+                <div class="admin-form__actions admin-logs-filters__actions">
+                  <button class="button-outline admin-primary-button" type="submit">Filtrer</button>
+                  <button class="button-outline" type="button" data-admin-reset-logs-filters>Réinitialiser</button>
+                </div>
+              </form>
+              <div class="admin-logs-summary" data-admin-logs-summary></div>
+              <div class="admin-logs-list" data-admin-logs-list></div>
+            </section>
+          </aside>
+        </section>
+      </section>
+
+      <section class="admin-preview" data-admin-preview hidden aria-hidden="true">
+        <div class="admin-preview__backdrop" data-admin-preview-close></div>
+        <div class="admin-preview__viewport">
+          <div class="admin-preview__dialog" role="dialog" aria-modal="true" aria-labelledby="admin-preview-title">
+            <div class="admin-preview__header">
+              <div class="admin-preview__intro">
+                <p class="contact-panel__eyebrow">Aperçu média</p>
+                <h2 id="admin-preview-title" data-admin-preview-title>Média</h2>
+                <p class="admin-preview__text" data-admin-preview-details></p>
+              </div>
+              <button
+                class="admin-preview__close button-outline admin-icon-button"
+                type="button"
+                data-admin-preview-close
+                aria-label="Fermer l’aperçu"
+                title="Fermer l’aperçu"
+              >
+                <i data-lucide="x" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <div class="admin-preview__stage">
+              <div class="admin-preview__media" data-admin-preview-media></div>
+            </div>
+
+            <aside class="admin-preview__meta">
+              <section class="admin-preview__section">
+                <p class="admin-preview__section-label">Repères</p>
+                <div class="admin-preview__badges" data-admin-preview-badges></div>
+              </section>
+
+              <section class="admin-preview__section">
+                <div class="admin-preview__form-header">
+                  <p class="admin-preview__section-label">Édition</p>
+                  <h3>Modifier les informations visibles</h3>
+                  <p class="admin-preview__helper">Mettez à jour les intitulés et les tags sans quitter l’aperçu.</p>
+                </div>
+                <form class="admin-form admin-preview__form" data-admin-preview-form>
+                  <label class="contact-field contact-field--full">
+                    <span>Alt FR</span>
+                    <input type="text" name="alt" autocomplete="off" />
+                  </label>
+                  <label class="contact-field contact-field--full">
+                    <span>Alt EN</span>
+                    <input type="text" name="altEn" autocomplete="off" />
+                  </label>
+                  <label class="contact-field contact-field--full">
+                    <span>Tags</span>
+                    <input type="text" name="tags" autocomplete="off" />
+                  </label>
+                  <div class="admin-form__actions">
+                    <button class="button-outline admin-primary-button" type="submit">Enregistrer les modifications</button>
+                  </div>
+                </form>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-confirm" data-admin-confirm hidden aria-hidden="true">
+        <div class="admin-confirm__backdrop" data-admin-confirm-close></div>
+        <div class="admin-confirm__viewport">
+          <div class="admin-confirm__dialog" role="dialog" aria-modal="true" aria-labelledby="admin-confirm-title">
+            <div class="admin-confirm__header">
+              <div class="admin-confirm__intro">
+                <p class="contact-panel__eyebrow" data-admin-confirm-eyebrow>Confirmation</p>
+                <h2 id="admin-confirm-title" data-admin-confirm-title>Confirmer la suppression</h2>
+                <p class="admin-confirm__text" data-admin-confirm-message>
+                  Cette action est définitive et ne peut pas être annulée.
+                </p>
+              </div>
+              <button
+                class="admin-confirm__close button-outline admin-icon-button"
+                type="button"
+                data-admin-confirm-close
+                aria-label="Fermer la confirmation"
+                title="Fermer la confirmation"
+              >
+                <i data-lucide="x" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="admin-confirm__body">
+              <div class="admin-confirm__target" data-admin-confirm-target hidden></div>
+            </div>
+            <div class="admin-confirm__actions">
+              <button class="button-outline" type="button" data-admin-confirm-cancel>Annuler</button>
+              <button class="button-outline admin-danger-button" type="button" data-admin-confirm-submit>Supprimer</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

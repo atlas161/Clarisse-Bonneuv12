@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" role="img" aria-labelledby="title desc">
+  <title id="title">Placeholder hero Clarisse Bonneu</title>
+  <desc id="desc">Visuel temporaire pour la section hero du site.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181b" />
+      <stop offset="50%" stop-color="#27272a" />
+      <stop offset="100%" stop-color="#09090b" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1500" fill="url(#bg)" />
+  <circle cx="600" cy="540" r="210" fill="#3f3f46" opacity="0.9" />
+  <rect x="335" y="760" width="530" height="380" rx="160" fill="#27272a" opacity="0.92" />
+  <rect x="180" y="1180" width="840" height="2" fill="#71717a" opacity="0.5" />
+  <text x="600" y="1258" fill="#f4f4f5" font-family="Arial, Helvetica, sans-serif" font-size="56" text-anchor="middle">
+    Clarisse Bonneu
+  </text>
+  <text x="600" y="1324" fill="#a1a1aa" font-family="Arial, Helvetica, sans-serif" font-size="28" text-anchor="middle">
+    Remplacez ce fichier dans public/images-public/hero
+  </text>
+</svg>

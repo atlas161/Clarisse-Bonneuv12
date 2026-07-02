@@ -1,0 +1,86 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_PUBLISHABLE_KEY,VITE_SUPABASE_URL,VITE_CLOUDINARY_API_KEY,VITE_CLOUDINARY_CLOUD_NAME,VITE_CLOUDINARY_UPLOAD_PRESET,VITE_PORTFOLIO_ROOT,PORTFOLIO_CLOUDINARY_ROOT,LIBRETRANSLATE_URLS,ADMIN_ALLOWED_EMAIL,MYMEMORY_CONTACT_EMAIL"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' https://upload-widget.cloudinary.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: wss:; frame-src https://www.youtube-nocookie.com"
+
+[[redirects]]
+  from = "/index.html"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/en/index.html"
+  to = "/en/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/api/portfolio"
+  to = "/.netlify/functions/portfolio-api"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/session"
+  to = "/.netlify/functions/admin-api?route=session"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/folders"
+  to = "/.netlify/functions/admin-api?route=folders"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/assets"
+  to = "/.netlify/functions/admin-api?route=assets"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/upload-signature"
+  to = "/.netlify/functions/admin-api?route=upload-signature"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/assets/reorder"
+  to = "/.netlify/functions/admin-api?route=assets/reorder"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/assets/bulk"
+  to = "/.netlify/functions/admin-api?route=assets/bulk"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/youtube-videos"
+  to = "/.netlify/functions/admin-api?route=youtube-videos"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/users"
+  to = "/.netlify/functions/admin-api?route=users"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/translate"
+  to = "/.netlify/functions/admin-api?route=translate"
+  status = 200

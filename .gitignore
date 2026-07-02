@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.local
+.dbg/
+.tmp-debug-youtube-ok/
+supabase/.temp/
+server/admin-audit-log-store.json
+server/admin-folder-store.json
+server/external-media-store.json

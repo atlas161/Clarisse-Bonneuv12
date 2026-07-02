@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" role="img" aria-labelledby="title desc">
+  <title id="title">Placeholder a propos Clarisse Bonneu</title>
+  <desc id="desc">Visuel temporaire pour la page a propos.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827" />
+      <stop offset="50%" stop-color="#1f2937" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1500" fill="url(#bg)" />
+  <rect x="230" y="220" width="740" height="1060" rx="46" fill="#111827" stroke="#374151" stroke-width="3" />
+  <circle cx="600" cy="520" r="188" fill="#374151" opacity="0.9" />
+  <rect x="385" y="730" width="430" height="320" rx="136" fill="#1f2937" opacity="0.96" />
+  <text x="600" y="1160" fill="#f3f4f6" font-family="Arial, Helvetica, sans-serif" font-size="54" text-anchor="middle">
+    Image a propos
+  </text>
+  <text x="600" y="1224" fill="#9ca3af" font-family="Arial, Helvetica, sans-serif" font-size="28" text-anchor="middle">
+    Remplacez ce fichier dans public/images-public/a-propos
+  </text>
+</svg>
