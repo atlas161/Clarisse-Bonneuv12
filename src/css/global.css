@@ -4158,13 +4158,17 @@ body.is-admin-sorting .admin-asset-grid {
   .admin-choice-group,
   .admin-users-form__role .admin-choice-group,
   .admin-current-folder-card__actions,
-  .admin-library-summary__actions,
   .admin-library-summary__heading,
   .admin-selection-dock,
   .admin-selection-dock__actions,
   .admin-user-card__actions {
     display: grid;
     width: 100%;
+  }
+
+  .admin-library-summary__actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 
   .admin-users-form__footer {
@@ -4174,7 +4178,6 @@ body.is-admin-sorting .admin-asset-grid {
 
   .admin-choice-chip,
   .admin-current-folder-card__actions > *,
-  .admin-library-summary__actions > *,
   .admin-selection-dock__actions > *,
   .admin-user-card__actions > * {
     width: 100%;
