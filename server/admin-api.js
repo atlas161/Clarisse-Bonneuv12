@@ -110,7 +110,6 @@ const getClientInviteRedirect = () => String(process.env.ADMIN_INVITE_REDIRECT_T
 const getDefaultClientRole = () => 'client';
 const getAllowedManagedRole = (value) => (String(value || '').trim().toLowerCase() === 'admin' ? 'admin' : 'client');
 const ADMIN_MFA_REMEMBER_WINDOW_MS = 24 * 60 * 60 * 1000;
-const SERVER_DEBUG_HTTP_ENABLED = String(process.env.ADMIN_DEBUG_HTTP || '').trim().toLowerCase() === 'true';
 const SUPABASE_FETCH_TIMEOUT_MS = (() => {
   const raw = Number.parseInt(String(process.env.SUPABASE_FETCH_TIMEOUT_MS || '7000'), 10);
   if (!Number.isFinite(raw) || raw <= 0) {
@@ -164,49 +163,7 @@ const fetchWithTimeout = async (input, init = {}) => {
   }
 };
 
-// #region debug-point A:reporter
-const reportFolderDebug = (hypothesisId, location, msg, data = {}) =>
-  !SERVER_DEBUG_HTTP_ENABLED
-    ? Promise.resolve()
-    :
-  fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sessionId: 'cloudinary-folder-sync',
-      runId: 'pre-fix',
-      hypothesisId,
-      location,
-      msg: `[DEBUG] ${msg}`,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-// #endregion
 
-// #region debug-point A:invite-reporter
-const reportInviteDebug = (hypothesisId, location, msg, data = {}) =>
-  !SERVER_DEBUG_HTTP_ENABLED
-    ? Promise.resolve()
-    :
-  fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sessionId: 'admin-invite-email',
-      runId: 'pre-fix',
-      hypothesisId,
-      location,
-      msg: `[DEBUG] ${msg}`,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-// #endregion
 
 const encodeBase64Url = (value) =>
   Buffer.from(typeof value === 'string' ? value : JSON.stringify(value))
@@ -221,10 +178,19 @@ const decodeBase64Url = (value) => {
   return Buffer.from(padded, 'base64').toString('utf8');
 };
 
-const getRememberDeviceSecret = () =>
-  String(
-    process.env.ADMIN_MFA_REMEMBER_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'clarisse-bonneu-admin-remember'
-  ).trim();
+const getRememberDeviceSecret = () => {
+  const secret = String(process.env.ADMIN_MFA_REMEMBER_SECRET || '').trim();
+
+  if (!secret) {
+    throw new HttpError(
+      500,
+      'La configuration serveur est incomplete (ADMIN_MFA_REMEMBER_SECRET manquant).',
+      'remember_secret_missing'
+    );
+  }
+
+  return secret;
+};
 
 const signRememberPayload = (payload) =>
   createHmac('sha256', getRememberDeviceSecret()).update(payload).digest('base64url');
@@ -257,9 +223,8 @@ const validateRememberedMfaToken = (req, user) => {
     return null;
   }
 
-  const expectedSignature = signRememberPayload(payload);
-
   try {
+    const expectedSignature = signRememberPayload(payload);
     const providedSignatureBuffer = Buffer.from(signature);
     const expectedSignatureBuffer = Buffer.from(expectedSignature);
 
@@ -740,24 +705,7 @@ const fetchAllResources = async (prefix, resourceType) => {
       resources.push(...(response.resources || []));
       nextCursor = response.next_cursor;
     } while (nextCursor);
-    // #region debug-point C:resources-success
-    void reportFolderDebug('C', 'server/admin-api.js:fetchAllResources:success', 'Cloudinary resources fetch success', {
-      prefix,
-      resourceType,
-      count: resources.length,
-      samplePublicIds: resources.slice(0, 5).map((resource) => resource?.public_id || null),
-    });
-    // #endregion
   } catch (error) {
-    // #region debug-point C:resources-error
-    void reportFolderDebug('C', 'server/admin-api.js:fetchAllResources:error', 'Cloudinary resources fetch failed', {
-      prefix,
-      resourceType,
-      message: error instanceof Error ? error.message : String(error || ''),
-      httpCode: error?.error?.http_code || error?.http_code || null,
-      errorName: error?.name || null,
-    });
-    // #endregion
     if (error?.error?.http_code === 420) {
       return [];
     }
@@ -838,22 +786,8 @@ const listCloudinarySubFolders = async (folderPath) => {
   const { cloudinary } = await configureCloudinary();
   try {
     const response = await cloudinary.api.sub_folders(folderPath);
-    // #region debug-point C:subfolders-success
-    void reportFolderDebug('C', 'server/admin-api.js:listCloudinarySubFolders:success', 'Cloudinary sub_folders success', {
-      folderPath,
-      count: Array.isArray(response.folders) ? response.folders.length : null,
-      samplePaths: Array.isArray(response.folders) ? response.folders.slice(0, 5).map((folder) => folder?.path || null) : [],
-    });
-    // #endregion
     return Array.isArray(response.folders) ? response.folders : [];
   } catch (error) {
-    // #region debug-point C:subfolders-error
-    void reportFolderDebug('C', 'server/admin-api.js:listCloudinarySubFolders:error', 'Cloudinary sub_folders failed', {
-      folderPath,
-      message: error instanceof Error ? error.message : String(error || ''),
-      httpCode: error?.http_code || null,
-    });
-    // #endregion
     return [];
   }
 };
@@ -994,16 +928,6 @@ const getFolderNavigatorPayload = async (folderInput, portfolioKey = null) => {
     isPathOwnedByPortfolio(folderPath, portfolio.key)
   );
 
-  // #region debug-point B:navigator-payload
-  void reportFolderDebug('B', 'server/admin-api.js:getFolderNavigatorPayload', 'Navigator payload assembled', {
-    folderInput: folderInput || null,
-    root: portfolio.logicalRoot,
-    currentFolder,
-    trackedCount: trackedSubFolders.length,
-    mergedCount: mergeFolderEntries(trackedSubFolders, trackedSubFolders).length,
-    trackedSample: trackedSubFolders.slice(0, 5),
-  });
-  // #endregion
 
   return {
     root: portfolio.logicalRoot,
@@ -1119,9 +1043,11 @@ const getFolderPayload = async (folderInput, portfolioKey = null) => {
       return resources;
     };
 
-    const [imageResources, videoResources] = await Promise.all([
+    const [imageResources, videoResources, prefixImageResources, prefixVideoResources] = await Promise.all([
       fetchByIds(orderedPublicIds, 'image'),
       fetchByIds(orderedPublicIds, 'video'),
+      fetchAllResources(`${currentFolder}/`, 'image'),
+      fetchAllResources(`${currentFolder}/`, 'video'),
     ]);
 
     const resourceMap = new Map();
@@ -1149,7 +1075,41 @@ const getFolderPayload = async (folderInput, portfolioKey = null) => {
       })
       .filter(Boolean);
 
-    return { assets: assetsFromOrder, resources: [...imageResources, ...videoResources] };
+    // Assets that exist in Cloudinary under this folder but never made it into the
+    // order store (e.g. the register call after an upload failed or was dropped by a
+    // race between two concurrent uploads) would otherwise become permanently invisible.
+    // Reconcile them here so they still show up, and persist them into the order store.
+    const orphanResources = [...prefixImageResources, ...prefixVideoResources].filter((resource) => {
+      const publicId = normalizePath(resource?.public_id);
+      return publicId && !resourceMap.has(publicId);
+    });
+
+    let maxOrder = orderedEntries.reduce(
+      (max, entry) => (Number.isFinite(entry.sortOrder) && entry.sortOrder > max ? entry.sortOrder : max),
+      -1
+    );
+
+    const orphanAssets = orphanResources
+      .map((resource) => applyOverrides(toAssetPayload(resource, cloudName)))
+      .filter(Boolean)
+      .sort(sortByOrderThenDate)
+      .map((asset) => {
+        maxOrder += 1;
+        return { ...asset, order: maxOrder };
+      });
+
+    if (orphanAssets.length > 0) {
+      const nextPublicIds = [
+        ...orderedEntries.map((entry) => entry.publicId),
+        ...orphanAssets.map((asset) => normalizePath(asset.publicId)).filter(Boolean),
+      ];
+      await saveAssetOrderForFolder(currentFolder, nextPublicIds).catch(() => {});
+    }
+
+    return {
+      assets: [...assetsFromOrder, ...orphanAssets],
+      resources: [...imageResources, ...videoResources, ...orphanResources],
+    };
   };
 
   const { assets: cloudinaryAssets, resources } = await resolveCloudinaryAssetsForFolder();
@@ -1163,15 +1123,6 @@ const getFolderPayload = async (folderInput, portfolioKey = null) => {
     navigatorPayload.folders.map((folder) => folder.path)
   );
 
-  // #region debug-point A:folder-assets-payload
-  void reportFolderDebug('A', 'server/admin-api.js:getFolderPayload', 'Folder payload assembled', {
-    folderInput: folderInput || null,
-    currentFolder,
-    folderCount: folders.length,
-    assetCount: assets.length,
-    sampleAssetIds: assets.slice(0, 5).map((asset) => asset?.publicId || asset?.id || null),
-  });
-  // #endregion
 
   return {
     root: navigatorPayload.root,
@@ -1378,6 +1329,7 @@ const deleteFolder = async (folderPath, portfolioKey = null) => {
 const deleteAsset = async (folderInput, publicId, resourceType = 'image', assetSource = 'cloudinary') => {
   if (assetSource === 'external' || resourceType === 'external-video') {
     await deleteExternalMediaItem(String(publicId || '').trim());
+    void clearPortfolioPayloadCacheSafe(getPortfolioDefinitionByPath(folderInput)?.key || null);
     return;
   }
 
@@ -1414,6 +1366,7 @@ const updateAsset = async (folderInput, publicId, resourceType = 'image', update
       altEn: updates.altEn,
       tags: updates.tags,
     });
+    void clearPortfolioPayloadCacheSafe(getPortfolioDefinitionByPath(folderInput)?.key || null);
     return;
   }
 
@@ -1494,19 +1447,8 @@ const reorderAssets = async (folderInput, items, portfolioKey = null) => {
 
 const createYoutubeVideo = async (body) => {
   const folder = normalizeWithinRoot(body.folder, getPortfolioDefinitionByPath(body.folder)?.key || body.portfolio);
-  // #region debug-point A:create-youtube-video
-  void reportFolderDebug('A', 'server/admin-api.js:createYoutubeVideo', 'Creating YouTube video from admin payload', {
-    folderInput: body?.folder || null,
-    normalizedFolder: folder,
-    hasUrl: Boolean(String(body?.url || '').trim()),
-    hasTitle: Boolean(String(body?.title || '').trim()),
-    hasAlt: Boolean(String(body?.alt || '').trim()),
-    hasAltEn: Boolean(String(body?.altEn || '').trim()),
-    tagCount: Array.isArray(body?.tags) ? body.tags.length : 0,
-  });
-  // #endregion
 
-  return createExternalYoutubeItem({
+  const item = await createExternalYoutubeItem({
     folder,
     url: body.url,
     title: body.title,
@@ -1515,6 +1457,10 @@ const createYoutubeVideo = async (body) => {
     tags: Array.isArray(body.tags) ? body.tags : [],
     order: body.order,
   });
+
+  void clearPortfolioPayloadCacheSafe(getPortfolioDefinitionByPath(folder)?.key || body.portfolio || null);
+
+  return item;
 };
 
 const signUpload = async (body) => {
@@ -1767,15 +1713,6 @@ const createManagedUser = async (body) => {
   const redirectTo = String(body.redirectTo || getClientInviteRedirect()).trim();
   const metadata = displayName ? { display_name: displayName } : {};
 
-  // #region debug-point A:invite-create-start
-  void reportInviteDebug('A', 'server/admin-api.js:createManagedUser:start', 'Creating managed user invite', {
-    email,
-    role,
-    hasDisplayName: Boolean(displayName),
-    redirectTo,
-    siteUrlEnv: String(process.env.SITE_URL || '').trim(),
-  });
-  // #endregion
 
   if (!email || !email.includes('@')) {
     throw new HttpError(400, 'Une adresse email valide est obligatoire.', 'invalid_user_email');
@@ -1787,18 +1724,6 @@ const createManagedUser = async (body) => {
       redirectTo,
     });
 
-    // #region debug-point B:invite-generate-link-result
-    void reportInviteDebug('B', 'server/admin-api.js:createManagedUser:inviteUserByEmail', 'Supabase inviteUserByEmail response received', {
-      email,
-      hasError: Boolean(error),
-      errorMessage: error?.message || '',
-      userId: data?.user?.id || '',
-      userEmail: data?.user?.email || '',
-      invitedAt: data?.user?.invited_at || '',
-      confirmationSentAt: data?.user?.confirmation_sent_at || '',
-      redirectTo,
-    });
-    // #endregion
 
     if (error || !data.user) {
       throw new HttpError(400, error?.message || "Impossible d'envoyer l'invitation par email.", 'invite_email_failed');
@@ -2034,7 +1959,7 @@ const bulkUpdateAssets = async (folderInput, items, updates) => {
       : null;
   const cloudinaryRows = [];
 
-  await Promise.all(
+  const results = await Promise.allSettled(
     normalizedItems.map(async (item) => {
       if (item.assetSource === 'external' || item.resourceType === 'external-video') {
         await updateExternalMediaItem(item.publicId, payload);
@@ -2060,6 +1985,18 @@ const bulkUpdateAssets = async (folderInput, items, updates) => {
 
   if (cloudinaryRows.length > 0) {
     await upsertAssetMetadataBulk(cloudinaryRows);
+  }
+
+  void clearPortfolioPayloadCacheSafe(getPortfolioDefinitionByPath(folderPath)?.key || null);
+
+  const failedCount = results.filter((result) => result.status === 'rejected').length;
+
+  if (failedCount > 0) {
+    throw new HttpError(
+      207,
+      `${failedCount} media(s) sur ${normalizedItems.length} n ont pas pu etre mis a jour.`,
+      'bulk_update_partial_failure'
+    );
   }
 };
 
@@ -2124,16 +2061,6 @@ const handleFolders = async (req, res) => {
   if (req.method === 'GET') {
     const folder = parseUrl(req).searchParams.get('folder') || undefined;
     const payload = await getFolderNavigatorPayload(folder, requestedPortfolioKey);
-    // #region debug-point A:folders-endpoint
-    void reportFolderDebug('A', 'server/admin-api.js:handleFolders:GET', 'Folders endpoint response ready', {
-      requestedFolder: folder || null,
-      responseRoot: payload?.root || null,
-      responseCurrentFolder: payload?.currentFolder || null,
-      responseCount: Array.isArray(payload?.folders) ? payload.folders.length : null,
-      responseSample: Array.isArray(payload?.folders) ? payload.folders.slice(0, 5).map((entry) => entry?.path || null) : [],
-      actor: session?.user?.email || null,
-    });
-    // #endregion
     sendJson(res, 200, payload);
     return;
   }
@@ -2441,17 +2368,6 @@ const handleYoutubeVideos = async (req, res) => {
   }
 
   const body = await readBody(req);
-  // #region debug-point A:youtube-route-entry
-  void reportFolderDebug('A', 'server/admin-api.js:handleYoutubeVideos', 'YouTube video route entered', {
-    actor: session?.user?.email || null,
-    folder: body?.folder || null,
-    hasUrl: Boolean(String(body?.url || '').trim()),
-    hasTitle: Boolean(String(body?.title || '').trim()),
-    hasAlt: Boolean(String(body?.alt || '').trim()),
-    hasAltEn: Boolean(String(body?.altEn || '').trim()),
-    tagCount: Array.isArray(body?.tags) ? body.tags.length : 0,
-  });
-  // #endregion
   const item = await createYoutubeVideo(body);
   await appendAuditLog(
     createAuditEntry(session, 'youtube_video_created', 'asset', item.title || item.url, {
@@ -2480,10 +2396,18 @@ const handleTranslate = async (req, res) => {
 
 const resetCurrentUserMfa = async (req, res) => {
   const session = await requireSession(req);
-  const { user } = session;
+  const { user, mfa } = session;
 
   if (req.method !== 'POST') {
     throw new HttpError(405, 'Methode non autorisee.', 'method_not_allowed');
+  }
+
+  if (mfa.currentAal !== 'aal2') {
+    throw new HttpError(
+      403,
+      'Valide d abord le code 2FA avant de desactiver la double authentification.',
+      'mfa_verification_required'
+    );
   }
 
   const supabase = getSupabaseAdmin();
@@ -2575,14 +2499,6 @@ const handleUsers = async (req, res) => {
 
   if (req.method === 'POST') {
     const body = await readBody(req);
-    // #region debug-point C:users-post-request
-    void reportInviteDebug('C', 'server/admin-api.js:handleUsers:POST', 'Admin users POST received', {
-      email: normalizeEmail(body?.email),
-      role: getAllowedManagedRole(body?.role),
-      redirectTo: String(body?.redirectTo || '').trim(),
-      actor: session?.user?.email || '',
-    });
-    // #endregion
     const payload = await createManagedUser(body);
     await appendAuditLog(
       createAuditEntry(session, 'user_created', 'user', payload.user.email, {
@@ -2753,15 +2669,6 @@ export const handleAdminApi = async (req, res) => {
   try {
     await routeRequest(req, res);
   } catch (error) {
-    // #region debug-point D:admin-api-error
-    void reportFolderDebug('D', 'server/admin-api.js:handleAdminApi:catch', 'Admin API request failed', {
-      name: error instanceof Error ? error.name : null,
-      message: error instanceof Error ? error.message : String(error || ''),
-      status: error?.status || null,
-      code: error?.code || null,
-      stackTop: error instanceof Error ? String(error.stack || '').split('\n').slice(0, 4).join(' | ') : null,
-    });
-    // #endregion
     if (error instanceof HttpError) {
       sendJson(res, error.status, {
         error: error.code,
