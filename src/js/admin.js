@@ -1647,6 +1647,50 @@ const scheduleFolderReload = () => {
   }, 900);
 };
 
+const flushPendingUploadRegistration = async () => {
+  if (state.pendingUploadRegisterTimer) {
+    window.clearTimeout(state.pendingUploadRegisterTimer);
+    state.pendingUploadRegisterTimer = null;
+  }
+
+  const folder = state.pendingUploadRegisterFolder;
+  const payloadDraft = state.pendingUploadRegisterDraft;
+  const items = Array.from(
+    new Map(
+      (Array.isArray(state.pendingUploadRegisterItems) ? state.pendingUploadRegisterItems : [])
+        .map((entry) => [normalizePath(entry?.publicId || ''), entry])
+        .filter(([key]) => key)
+    ).values()
+  );
+
+  state.pendingUploadRegisterItems = [];
+  state.pendingUploadRegisterFolder = null;
+  state.pendingUploadRegisterDraft = null;
+
+  if (!folder || items.length === 0) {
+    return;
+  }
+
+  try {
+    await apiRequest(getAdminApiPath('assets/register'), {
+      method: 'POST',
+      body: {
+        folder,
+        items,
+        alt: payloadDraft?.alt ?? null,
+        altEn: payloadDraft?.altEn ?? null,
+        tags: Array.isArray(payloadDraft?.tags) ? payloadDraft.tags : [],
+      },
+    });
+    bumpPortfolioCacheVersion();
+    setStatus('Import terminé. Mise à jour de la bibliothèque en cours...', 'success');
+    await loadFolder(folder);
+  } catch (error) {
+    setStatus(error instanceof Error ? error.message : "L'association des médias au dossier a échoué.", 'error');
+    scheduleFolderReload();
+  }
+};
+
 const queueUploadRegistration = (logicalFolder, draft, item) => {
   const folderPath = normalizePath(logicalFolder || '');
   const publicId = normalizePath(item?.publicId || item?.public_id || '');
@@ -1656,57 +1700,30 @@ const queueUploadRegistration = (logicalFolder, draft, item) => {
     return;
   }
 
-  if (state.pendingUploadRegisterFolder && state.pendingUploadRegisterFolder !== folderPath) {
-    state.pendingUploadRegisterFolder = folderPath;
-    state.pendingUploadRegisterDraft = draft || null;
-    state.pendingUploadRegisterItems = [];
+  if (
+    state.pendingUploadRegisterFolder &&
+    state.pendingUploadRegisterFolder !== folderPath &&
+    Array.isArray(state.pendingUploadRegisterItems) &&
+    state.pendingUploadRegisterItems.length > 0
+  ) {
+    // A different folder has items waiting to be registered: flush them now
+    // instead of silently dropping them, so uploads never become orphaned.
+    void flushPendingUploadRegistration();
   }
 
   state.pendingUploadRegisterFolder = folderPath;
   state.pendingUploadRegisterDraft = draft || null;
+  state.pendingUploadRegisterItems = Array.isArray(state.pendingUploadRegisterItems)
+    ? state.pendingUploadRegisterItems
+    : [];
   state.pendingUploadRegisterItems.push({ publicId, resourceType });
 
   if (state.pendingUploadRegisterTimer) {
     window.clearTimeout(state.pendingUploadRegisterTimer);
   }
 
-  state.pendingUploadRegisterTimer = window.setTimeout(async () => {
-    state.pendingUploadRegisterTimer = null;
-
-    const folder = state.pendingUploadRegisterFolder;
-    const payloadDraft = state.pendingUploadRegisterDraft;
-    const items = Array.from(
-      new Map(
-        (Array.isArray(state.pendingUploadRegisterItems) ? state.pendingUploadRegisterItems : [])
-          .map((entry) => [normalizePath(entry?.publicId || ''), entry])
-          .filter(([key]) => key)
-      ).values()
-    );
-
-    state.pendingUploadRegisterItems = [];
-
-    if (!folder || items.length === 0) {
-      return;
-    }
-
-    try {
-      await apiRequest(getAdminApiPath('assets/register'), {
-        method: 'POST',
-        body: {
-          folder,
-          items,
-          alt: payloadDraft?.alt ?? null,
-          altEn: payloadDraft?.altEn ?? null,
-          tags: Array.isArray(payloadDraft?.tags) ? payloadDraft.tags : [],
-        },
-      });
-      bumpPortfolioCacheVersion();
-      setStatus('Import terminé. Mise à jour de la bibliothèque en cours...', 'success');
-      await loadFolder(folder);
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "L'association des médias au dossier a échoué.", 'error');
-      scheduleFolderReload();
-    }
+  state.pendingUploadRegisterTimer = window.setTimeout(() => {
+    void flushPendingUploadRegistration();
   }, 520);
 };
 
