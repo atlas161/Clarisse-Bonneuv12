@@ -11,6 +11,7 @@ import {
   FolderClosed,
   FolderOpen,
   FolderPlus,
+  FolderSymlink,
   GripVertical,
   KeyRound,
   ListFilter,
@@ -99,8 +100,6 @@ const MFA_ISSUER = 'Clarisse Bonneu SiteWeb';
 const ADMIN_MFA_REMEMBER_KEY = 'clarisse-bonneu-admin-mfa-remember';
 const PORTFOLIO_CACHE_VERSION_KEY = 'clarisse-bonneu-portfolio-version:v2';
 const ADMIN_MFA_REMEMBER_WINDOW_MS = 24 * 60 * 60 * 1000;
-const ADMIN_DEBUG_ENABLED = false;
-const FOLDER_DND_DEBUG_ENABLED = true;
 const FLATPICKR_FR_COMPACT = {
   ...French,
   weekdays: {
@@ -111,49 +110,7 @@ const FLATPICKR_FR_COMPACT = {
 };
 const FLATPICKR_VISIBLE_WEEKDAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
-// #region debug-point A:runtime-reporter
-const reportAdminDebug = (hypothesisId, location, msg, data = {}) =>
-  !ADMIN_DEBUG_ENABLED
-    ? Promise.resolve()
-    :
-  fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sessionId: 'admin-context-menu',
-      runId: 'post-fix',
-      hypothesisId,
-      location,
-      msg: `[DEBUG] ${msg}`,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-// #endregion
 
-// #region debug-point A:invite-reporter
-const reportInviteDebug = (hypothesisId, location, msg, data = {}) =>
-  !ADMIN_DEBUG_ENABLED
-    ? Promise.resolve()
-    :
-  fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sessionId: 'admin-invite-email',
-      runId: 'pre-fix',
-      hypothesisId,
-      location,
-      msg: `[DEBUG] ${msg}`,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-// #endregion
 
 const bumpPortfolioCacheVersion = () => {
   try {
@@ -163,48 +120,6 @@ const bumpPortfolioCacheVersion = () => {
   }
 };
 
-const reportFolderSyncDebug = (hypothesisId, location, msg, data = {}) =>
-  !ADMIN_DEBUG_ENABLED
-    ? Promise.resolve()
-    :
-  fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sessionId: 'cloudinary-folder-sync',
-      runId: 'pre-fix',
-      hypothesisId,
-      location,
-      msg: `[DEBUG] ${msg}`,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-
-// #region debug-point A:folder-dnd-reporter
-const reportFolderDndDebug = (hypothesisId, location, msg, data = {}) =>
-  !FOLDER_DND_DEBUG_ENABLED
-    ? Promise.resolve()
-    :
-  fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sessionId: 'folder-dnd-admin',
-      runId: 'pre-fix',
-      hypothesisId,
-      location,
-      msg: `[DEBUG] ${msg}`,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-// #endregion
-
 const renderLucideIcons = () => {
   createIcons({
     icons: {
@@ -212,6 +127,7 @@ const renderLucideIcons = () => {
       FolderClosed,
       FolderOpen,
       FolderPlus,
+      FolderSymlink,
       ArrowLeft,
       Plus,
       Camera,
@@ -244,12 +160,6 @@ const renderLucideIcons = () => {
     },
   });
 
-  // #region debug-point E:lucide-render
-  void reportFolderSyncDebug('E', 'src/js/admin.js:renderLucideIcons', 'Lucide render executed', {
-    quickActionsVisible: !dom?.shellQuickActions?.hasAttribute?.('hidden'),
-    logoutIconNodes: document.querySelectorAll('[data-admin-signout] [data-lucide="log-out"], [data-admin-signout] svg').length,
-  });
-  // #endregion
 };
 
 const dom = {
@@ -2281,11 +2191,6 @@ const renderLogsActionMenu = () => {
     return;
   }
 
-  // #region debug-point D:logs-action-render
-  reportAdminDebug('D', 'src/js/admin.js:renderLogsActionMenu', 'Render logs action menu', {
-    currentValue: dom.logsActionInput instanceof HTMLSelectElement ? dom.logsActionInput.value : '',
-  });
-  // #endregion
 
   dom.logsActionMenu.replaceChildren();
 
@@ -2508,12 +2413,6 @@ const showShell = () => {
   dom.shellSection?.removeAttribute('hidden');
   dom.shellQuickActions?.removeAttribute('hidden');
   renderLucideIcons();
-  // #region debug-point E:shell-open
-  void reportFolderSyncDebug('E', 'src/js/admin.js:showShell', 'Shell shown and quick actions toggled', {
-    shellHidden: dom.shellSection?.hasAttribute?.('hidden') ?? null,
-    quickActionsHidden: dom.shellQuickActions?.hasAttribute?.('hidden') ?? null,
-  });
-  // #endregion
   syncAdminPane();
 };
 
@@ -2931,11 +2830,6 @@ const closeAssetMenu = () => {
   state.assetMenuPoint = null;
 
   if (dom.assetMenu instanceof HTMLElement) {
-    // #region debug-point A:asset-menu-close
-    reportAdminDebug('A', 'src/js/admin.js:closeAssetMenu', 'Close asset menu requested', {
-      menuHiddenBefore: dom.assetMenu.hidden,
-    });
-    // #endregion
     dom.assetMenu.hidden = true;
     dom.assetMenu.dataset.state = 'closed';
     dom.assetMenu.style.removeProperty('left');
@@ -3193,15 +3087,6 @@ const openAssetMenu = (asset, clientX, clientY) => {
     return;
   }
 
-  // #region debug-point A:asset-menu-open
-  reportAdminDebug('A', 'src/js/admin.js:openAssetMenu', 'Open asset menu requested', {
-    assetKey: getAssetKey(asset),
-    assetName: getAssetDisplayName(asset),
-    x: clientX,
-    y: clientY,
-    menuHiddenBefore: dom.assetMenu.hidden,
-  });
-  // #endregion
 
   state.assetMenuKey = getAssetKey(asset);
   state.assetMenuPoint = {
@@ -3278,12 +3163,6 @@ const initLogsDatePickers = () => {
       return;
     }
 
-    // #region debug-point D:datepicker-init
-    reportAdminDebug('D', 'src/js/admin.js:initLogsDatePickers', 'Init flatpickr input', {
-      inputKey: input.dataset.adminLogsDateFrom !== undefined ? 'date-from' : 'date-to',
-      placeholder: input.placeholder,
-    });
-    // #endregion
 
     flatpickr(input, {
       locale: FLATPICKR_FR_COMPACT,
@@ -3470,35 +3349,10 @@ const syncFolderSortableState = () => {
   }
 
   if (!state.folderSortable) {
-    // #region debug-point A:folder-sortable-state-no-instance
-    void reportFolderDndDebug('A', 'src/js/admin.js:syncFolderSortableState:no-instance', 'Folder sortable state synced without Sortable instance', {
-      isEnabled,
-      activePane: state.activePane,
-      selectedFolder: state.selectedFolder || null,
-      currentFolder: state.currentFolder || null,
-      availableFoldersCount: Array.isArray(state.availableFolders) ? state.availableFolders.length : null,
-      searchQuery: state.folderSearchQuery || '',
-      folderReorderInFlight: state.folderReorderInFlight,
-      activePortfolioKey: state.activePortfolioKey || null,
-    });
-    // #endregion
     return;
   }
 
   state.folderSortable.option('disabled', !isEnabled);
-  // #region debug-point A:folder-sortable-state
-  void reportFolderDndDebug('A', 'src/js/admin.js:syncFolderSortableState', 'Folder sortable state synced', {
-    isEnabled,
-    sortableDisabled: state.folderSortable.option('disabled'),
-    activePane: state.activePane,
-    selectedFolder: state.selectedFolder || null,
-    currentFolder: state.currentFolder || null,
-    availableFoldersCount: Array.isArray(state.availableFolders) ? state.availableFolders.length : null,
-    searchQuery: state.folderSearchQuery || '',
-    folderReorderInFlight: state.folderReorderInFlight,
-    activePortfolioKey: state.activePortfolioKey || null,
-  });
-  // #endregion
 };
 
 const updateSelectionCount = () => {
@@ -3796,13 +3650,6 @@ const renderFolders = () => {
   dom.folderList.replaceChildren();
   const folders = getFilteredFolders();
 
-  // #region debug-point D:render-folders
-  void reportFolderSyncDebug('D', 'src/js/admin.js:renderFolders', 'Rendering folder list', {
-    availableFoldersCount: Array.isArray(state.availableFolders) ? state.availableFolders.length : null,
-    filteredFoldersCount: Array.isArray(folders) ? folders.length : null,
-    samplePaths: Array.isArray(folders) ? folders.slice(0, 5).map((folder) => folder?.path || null) : [],
-  });
-  // #endregion
 
   if (state.folderListLoadCount > 0) {
     const loading = document.createElement('div');
@@ -3897,22 +3744,9 @@ const renderFolders = () => {
 
 const syncExplorerFolders = async () => {
   beginFolderListLoading();
-  // #region debug-point A:folders-request
-  void reportFolderSyncDebug('A', 'src/js/admin.js:syncExplorerFolders:start', 'Requesting admin folders payload', {
-    path: getAdminApiPath('folders'),
-  });
-  // #endregion
   try {
     const payload = await apiRequest(getAdminApiPath('folders'));
     state.availableFolders = Array.isArray(payload?.folders) ? [...payload.folders] : [];
-    // #region debug-point A:folders-response
-    void reportFolderSyncDebug('A', 'src/js/admin.js:syncExplorerFolders:success', 'Admin folders payload received', {
-      foldersCount: Array.isArray(payload?.folders) ? payload.folders.length : null,
-      root: payload?.root || null,
-      currentFolder: payload?.currentFolder || null,
-      samplePaths: Array.isArray(payload?.folders) ? payload.folders.slice(0, 5).map((folder) => folder?.path || null) : [],
-    });
-    // #endregion
     finishFolderListLoading(true);
     renderFolders();
     initFolderSortable();
@@ -4398,24 +4232,9 @@ const scheduleAssetReorderCommit = (assets) => {
 
 const initFolderSortable = () => {
   if (!dom.folderList || state.folderSortable) {
-    // #region debug-point A:folder-sortable-init-skipped
-    void reportFolderDndDebug('A', 'src/js/admin.js:initFolderSortable:skip', 'Folder Sortable init skipped', {
-      hasFolderList: Boolean(dom.folderList),
-      hasExistingSortable: Boolean(state.folderSortable),
-      childCount: dom.folderList?.children?.length ?? null,
-    });
-    // #endregion
     return;
   }
 
-  // #region debug-point A:folder-sortable-init
-  void reportFolderDndDebug('A', 'src/js/admin.js:initFolderSortable:start', 'Initializing folder Sortable', {
-    childCount: dom.folderList.children.length,
-    activePortfolioKey: state.activePortfolioKey || null,
-    currentFolder: state.currentFolder || null,
-    selectedFolder: state.selectedFolder || null,
-  });
-  // #endregion
 
   state.folderSortable = new Sortable(dom.folderList, {
     animation: 220,
@@ -4439,35 +4258,12 @@ const initFolderSortable = () => {
     preventOnFilter: false,
     disabled: true,
     onFilter: ({ item, target, originalEvent }) => {
-      // #region debug-point C:folder-sortable-filter
-      void reportFolderDndDebug('C', 'src/js/admin.js:initFolderSortable:onFilter', 'Folder drag hit filtered target', {
-        itemPath: item?.dataset?.folderPath || null,
-        targetClass: target instanceof Element ? target.className : null,
-        targetTag: target instanceof Element ? target.tagName : null,
-        eventType: originalEvent?.type || null,
-      });
-      // #endregion
     },
     onChoose: ({ item }) => {
-      // #region debug-point B:folder-sortable-choose
-      void reportFolderDndDebug('B', 'src/js/admin.js:initFolderSortable:onChoose', 'Folder drag choose fired', {
-        itemPath: item?.dataset?.folderPath || null,
-        oldDomIndex: Array.from(dom.folderList?.children || []).indexOf(item),
-        activePortfolioKey: state.activePortfolioKey || null,
-        currentFolder: state.currentFolder || null,
-      });
-      // #endregion
       dom.folderList?.classList.add('is-sorting');
       item?.classList.add('is-drag-origin');
     },
     onStart: () => {
-      // #region debug-point B:folder-sortable-start
-      void reportFolderDndDebug('B', 'src/js/admin.js:initFolderSortable:onStart', 'Folder drag start fired', {
-        activePortfolioKey: state.activePortfolioKey || null,
-        currentFolder: state.currentFolder || null,
-        availableFoldersCount: Array.isArray(state.availableFolders) ? state.availableFolders.length : null,
-      });
-      // #endregion
       state.folderDragActive = true;
       document.body.classList.add('is-admin-sorting');
       setStatus('Maintenez puis glissez une carte pour réorganiser les dossiers.', 'info');
@@ -4476,17 +4272,6 @@ const initFolderSortable = () => {
       item?.classList.remove('is-drag-origin');
     },
     onEnd: async ({ oldIndex, newIndex, item }) => {
-      // #region debug-point B:folder-sortable-end
-      void reportFolderDndDebug('B', 'src/js/admin.js:initFolderSortable:onEnd', 'Folder drag end fired', {
-        oldIndex,
-        newIndex,
-        itemPath: item?.dataset?.folderPath || null,
-        isEnabledAtDrop: isFolderSortEnabled(),
-        activePortfolioKey: state.activePortfolioKey || null,
-        currentFolder: state.currentFolder || null,
-        availableFolderPaths: Array.isArray(state.availableFolders) ? state.availableFolders.map((folder) => folder?.path || null) : [],
-      });
-      // #endregion
       state.folderDragActive = false;
       state.folderDragSuppressOpenUntil = Date.now() + 260;
       document.body.classList.remove('is-admin-sorting');
@@ -4508,15 +4293,6 @@ const initFolderSortable = () => {
         !Number.isInteger(newIndex) ||
         oldIndex === newIndex
       ) {
-        // #region debug-point B:folder-sortable-end-ignored
-        void reportFolderDndDebug('B', 'src/js/admin.js:initFolderSortable:onEnd:ignored', 'Folder drag end ignored before persistence', {
-          oldIndex,
-          newIndex,
-          isEnabledAtDrop: isFolderSortEnabled(),
-          activePortfolioKey: state.activePortfolioKey || null,
-          currentFolder: state.currentFolder || null,
-        });
-        // #endregion
         renderFolders();
         return;
       }
@@ -4538,13 +4314,6 @@ const initFolderSortable = () => {
       syncFolderSortableState();
 
       try {
-        // #region debug-point D:folder-reorder-request
-        void reportFolderDndDebug('D', 'src/js/admin.js:initFolderSortable:reorderRequest', 'Sending folder reorder request', {
-          activePortfolioKey: state.activePortfolioKey || null,
-          parentFolder: state.currentFolder || config.rootFolder || null,
-          orderedPaths: reorderedFolders.map((folder) => folder.path),
-        });
-        // #endregion
         await apiRequest(getAdminApiPath('folders'), {
           method: 'PATCH',
           body: {
@@ -4555,25 +4324,10 @@ const initFolderSortable = () => {
             })),
           },
         });
-        // #region debug-point E:folder-reorder-success
-        void reportFolderDndDebug('E', 'src/js/admin.js:initFolderSortable:reorderSuccess', 'Folder reorder request succeeded', {
-          activePortfolioKey: state.activePortfolioKey || null,
-          parentFolder: state.currentFolder || config.rootFolder || null,
-          orderedPaths: reorderedFolders.map((folder) => folder.path),
-        });
-        // #endregion
         bumpPortfolioCacheVersion();
         await syncExplorerFolders();
         setStatus("Le nouvel ordre des dossiers a été enregistré.", 'success');
       } catch (error) {
-        // #region debug-point D:folder-reorder-error
-        void reportFolderDndDebug('D', 'src/js/admin.js:initFolderSortable:reorderError', 'Folder reorder request failed', {
-          activePortfolioKey: state.activePortfolioKey || null,
-          parentFolder: state.currentFolder || config.rootFolder || null,
-          orderedPaths: reorderedFolders.map((folder) => folder.path),
-          error: error instanceof Error ? error.message : String(error),
-        });
-        // #endregion
         setStatus(error instanceof Error ? error.message : "Le réordonnancement des dossiers a échoué.", 'error');
         await syncExplorerFolders();
       } finally {
@@ -4608,12 +4362,6 @@ const loadFolder = async (folder = config.rootFolder) => {
   syncMoveFolderButtonState(targetFolder, true);
   setStatus(`Synchronisation du dossier ${getFolderDisplayName(targetFolder)} en cours...`, 'info');
 
-  // #region debug-point A:load-folder-start
-  void reportFolderSyncDebug('A', 'src/js/admin.js:loadFolder:start', 'Loading folder payload', {
-    targetFolder,
-    requestId,
-  });
-  // #endregion
 
   try {
     const payload = await apiRequest(
@@ -4629,15 +4377,6 @@ const loadFolder = async (folder = config.rootFolder) => {
 
     state.availableFolders = Array.isArray(payload?.folders) ? [...payload.folders] : [];
 
-    // #region debug-point A:load-folder-success
-    void reportFolderSyncDebug('A', 'src/js/admin.js:loadFolder:success', 'Folder payload received', {
-      targetFolder,
-      payloadCurrentFolder: payload?.currentFolder || null,
-      payloadFolderCount: Array.isArray(payload?.folders) ? payload.folders.length : null,
-      payloadAssetCount: Array.isArray(payload?.assets) ? payload.assets.length : null,
-      sampleAssetIds: Array.isArray(payload?.assets) ? payload.assets.slice(0, 5).map((asset) => asset?.publicId || asset?.id || null) : [],
-    });
-    // #endregion
 
     state.currentFolder = payload.currentFolder;
     state.selectedFolder = normalizePath(payload.currentFolder) === normalizePath(config.rootFolder) ? null : payload.currentFolder;
@@ -5753,13 +5492,6 @@ const bindEvents = () => {
       target instanceof Node &&
       !(dom.assetMenu instanceof HTMLElement && dom.assetMenu.contains(target))
     ) {
-      // #region debug-point A:document-click-close
-      reportAdminDebug('A', 'src/js/admin.js:documentClick', 'Document click closes asset menu', {
-        targetTag: target instanceof Element ? target.tagName : 'unknown',
-        targetClass: target instanceof Element ? target.className || '' : '',
-        assetMenuHiddenBefore: dom.assetMenu instanceof HTMLElement ? dom.assetMenu.hidden : null,
-      });
-      // #endregion
       closeAssetMenu();
     }
 
@@ -5972,14 +5704,6 @@ const bindEvents = () => {
     try {
       const formData = new FormData(dom.userForm);
       const password = String(formData.get('password') || '').trim();
-      // #region debug-point D:user-form-submit
-      void reportInviteDebug('D', 'src/js/admin.js:userForm:submit', 'Submitting managed user invite form', {
-        email: normalizeEmail(formData.get('email')),
-        role: String(formData.get('role') || '').trim(),
-        redirectTo: `${window.location.origin}/admin.html`,
-        hasPassword: Boolean(password),
-      });
-      // #endregion
       const payload = await apiRequest(getAdminApiPath('users'), {
         method: 'POST',
         body: {
@@ -6007,13 +5731,6 @@ const bindEvents = () => {
         dom.userLinkLabel.textContent = 'Accès généré :';
       }
 
-      // #region debug-point E:user-form-response
-      void reportInviteDebug('E', 'src/js/admin.js:userForm:response', 'Managed user invite response received', {
-        email: normalizeEmail(formData.get('email')),
-        userId: payload?.user?.id || '',
-        userEmail: payload?.user?.email || '',
-      });
-      // #endregion
 
       setStatus(
         payload?.mode === 'invite'
@@ -6036,11 +5753,6 @@ const bindEvents = () => {
         dom.userLinkWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     } catch (error) {
-      // #region debug-point E:user-form-error
-      void reportInviteDebug('E', 'src/js/admin.js:userForm:error', 'Managed user invite request failed', {
-        message: error instanceof Error ? error.message : 'unknown_error',
-      });
-      // #endregion
       setStatus(error instanceof Error ? error.message : 'La création du compte a échoué.', 'error');
     } finally {
       setBusy(submitButton, false, 'Création...');
@@ -6107,16 +5819,6 @@ const bindEvents = () => {
         return;
       }
 
-      // #region debug-point C:grid-mousedown
-      reportAdminDebug('C', 'src/js/admin.js:assetGridMousedown', 'Asset grid mousedown', {
-        button: event.button,
-        buttons: event.buttons,
-        assetKey: getAssetKey(asset),
-        assetName: getAssetDisplayName(asset),
-        targetTag: event.target instanceof Element ? event.target.tagName : 'unknown',
-        targetClass: event.target instanceof Element ? event.target.className || '' : '',
-      });
-      // #endregion
     },
     { capture: true }
   );
@@ -6134,16 +5836,6 @@ const bindEvents = () => {
         return;
       }
 
-      // #region debug-point C:grid-mouseup-right
-      reportAdminDebug('C', 'src/js/admin.js:assetGridMouseup', 'Asset grid right mouseup', {
-        assetKey: getAssetKey(asset),
-        assetName: getAssetDisplayName(asset),
-        x: event.clientX,
-        y: event.clientY,
-        targetTag: event.target instanceof Element ? event.target.tagName : 'unknown',
-        targetClass: event.target instanceof Element ? event.target.className || '' : '',
-      });
-      // #endregion
 
       event.preventDefault();
       event.stopPropagation();
@@ -6161,16 +5853,6 @@ const bindEvents = () => {
         return;
       }
 
-      // #region debug-point C:grid-contextmenu
-      reportAdminDebug('C', 'src/js/admin.js:assetGridContextmenu', 'Asset grid contextmenu', {
-        assetKey: getAssetKey(asset),
-        assetName: getAssetDisplayName(asset),
-        x: event.clientX,
-        y: event.clientY,
-        targetTag: event.target instanceof Element ? event.target.tagName : 'unknown',
-        targetClass: event.target instanceof Element ? event.target.className || '' : '',
-      });
-      // #endregion
 
       event.preventDefault();
       event.stopPropagation();
@@ -6219,11 +5901,6 @@ const bindEvents = () => {
 
   dom.logsActionTrigger?.addEventListener('click', (event) => {
     event.stopPropagation();
-    // #region debug-point D:logs-action-trigger
-    reportAdminDebug('D', 'src/js/admin.js:logsActionTrigger', 'Toggle logs action menu', {
-      expandedBefore: dom.logsActionTrigger?.getAttribute('aria-expanded') || 'false',
-    });
-    // #endregion
     setLogsActionMenuOpen(!state.logsActionMenuOpen);
   });
 
