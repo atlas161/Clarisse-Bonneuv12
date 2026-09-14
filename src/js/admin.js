@@ -14,6 +14,8 @@ import {
   FolderSymlink,
   GripVertical,
   KeyRound,
+  Library,
+  ListCollapse,
   ListFilter,
   LogOut,
   MoreHorizontal,
@@ -28,6 +30,7 @@ import {
   Trash2,
   Upload,
   UserCog,
+  Users,
   X,
 } from 'lucide';
 import { computePosition, flip, offset, shift } from '@floating-ui/dom';
@@ -134,6 +137,9 @@ const renderLucideIcons = () => {
       Check,
       GripVertical,
       Film,
+      Library,
+      ListCollapse,
+      Users,
       Pencil,
       Search,
       ListFilter,
@@ -2406,12 +2412,14 @@ const showAuth = () => {
   dom.authSection?.removeAttribute('hidden');
   dom.shellSection?.setAttribute('hidden', 'true');
   dom.shellQuickActions?.setAttribute('hidden', 'true');
+  document.body.classList.remove('has-admin-shell');
 };
 
 const showShell = () => {
   dom.authSection?.setAttribute('hidden', 'true');
   dom.shellSection?.removeAttribute('hidden');
   dom.shellQuickActions?.removeAttribute('hidden');
+  document.body.classList.add('has-admin-shell');
   renderLucideIcons();
   syncAdminPane();
 };
@@ -3710,7 +3718,14 @@ const renderFolders = () => {
     order.className = 'admin-folder-chip__order';
     order.setAttribute('aria-hidden', 'true');
     order.title = 'Maintenez puis glissez pour réorganiser ce dossier';
-    order.textContent = String(Number(folder.order ?? 0) + 1);
+    const orderGrip = document.createElement('i');
+    orderGrip.className = 'admin-folder-chip__grip';
+    orderGrip.setAttribute('data-lucide', 'grip-vertical');
+    orderGrip.setAttribute('aria-hidden', 'true');
+    const orderNumber = document.createElement('span');
+    orderNumber.className = 'admin-folder-chip__order-number';
+    orderNumber.textContent = String(Number(folder.order ?? 0) + 1);
+    order.append(orderGrip, orderNumber);
 
     const button = document.createElement('button');
     button.className = 'admin-folder-chip__button';
@@ -4025,6 +4040,21 @@ const renderAssets = () => {
       openPreview(asset);
     });
 
+    const media = document.createElement('div');
+    media.className = 'admin-asset-card__media';
+    media.append(image);
+
+    if (getAssetKind(asset) === 'video') {
+      const videoBadge = document.createElement('span');
+      videoBadge.className = 'admin-asset-card__kind';
+      videoBadge.setAttribute('aria-hidden', 'true');
+      const videoIcon = document.createElement('i');
+      videoIcon.setAttribute('data-lucide', 'film');
+      videoIcon.setAttribute('aria-hidden', 'true');
+      videoBadge.append(videoIcon);
+      media.append(videoBadge);
+    }
+
     const content = document.createElement('div');
     content.className = 'admin-asset-card__content';
 
@@ -4057,7 +4087,7 @@ const renderAssets = () => {
     topRow.append(checkboxLabel);
     footer.append(orderBadge, title);
     content.append(topRow, footer);
-    article.append(image, content);
+    article.append(media, content);
     dom.assetGrid.append(article);
   });
 
@@ -4240,6 +4270,7 @@ const initFolderSortable = () => {
     animation: 220,
     easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
     draggable: '.admin-folder-chip',
+    handle: '.admin-folder-chip__order',
     delayOnTouchOnly: true,
     delay: 120,
     touchStartThreshold: 6,
@@ -4254,11 +4285,7 @@ const initFolderSortable = () => {
     ghostClass: 'is-sort-ghost',
     chosenClass: 'is-sort-chosen',
     dragClass: 'is-sort-drag',
-    filter: '.admin-folder-chip__button, .admin-folder-chip__button *',
-    preventOnFilter: false,
     disabled: true,
-    onFilter: ({ item, target, originalEvent }) => {
-    },
     onChoose: ({ item }) => {
       dom.folderList?.classList.add('is-sorting');
       item?.classList.add('is-drag-origin');
