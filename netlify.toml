@@ -21,7 +21,7 @@ Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
 for = "/admin.html"
 [headers.values]
 Cache-Control = "no-store"
-Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' https://upload-widget.cloudinary.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: wss:; frame-src https://www.youtube-nocookie.com"
+Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' https://upload-widget.cloudinary.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: wss:; frame-src https://www.youtube-nocookie.com https://upload-widget.cloudinary.com"
 
 [[redirects]]
 from = "/index.html"
