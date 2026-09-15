@@ -1566,24 +1566,126 @@ body.menu-open .site-header {
   gap: 1.5rem;
 }
 
+.admin-shell {
+  position: relative;
+}
+
 .admin-shell-layout {
   display: grid;
   gap: 1.5rem;
 }
 
-.admin-shell-nav {
-  display: grid;
-  gap: 1.1rem;
+:root {
+  --admin-sidebar-width: 16rem;
+  --admin-bottombar-height: 4.5rem;
 }
 
-.admin-shell-nav__header {
-  display: grid;
+body.has-admin-shell .admin-page {
+  padding-bottom: calc(var(--admin-bottombar-height) + env(safe-area-inset-bottom) + 1rem);
+}
+
+.admin-sidebar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding: 0.5rem calc(0.6rem + env(safe-area-inset-left)) calc(0.5rem + env(safe-area-inset-bottom)) calc(0.6rem + env(safe-area-inset-right));
+  background: rgba(9, 9, 10, 0.86);
+  border-top: 1px solid var(--color-border);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+}
+
+.admin-sidebar__brand {
+  display: none;
+}
+
+.admin-sidebar__buttons {
+  display: flex;
+  flex: 1 1 auto;
   gap: 0.35rem;
 }
 
-.admin-shell-nav__title {
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  line-height: 1.02;
+.admin-sidebar__buttons .admin-pane-button {
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-height: 3.4rem;
+  padding: 0.5rem 0.35rem;
+  font-size: 0.7rem;
+}
+
+.admin-sidebar__buttons .admin-pane-button .admin-pane-button__icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  body.has-admin-shell .admin-page {
+    padding-bottom: 0;
+    padding-left: calc(var(--admin-sidebar-width) + var(--page-gutter));
+  }
+
+  .admin-sidebar {
+    top: 0;
+    bottom: 0;
+    right: auto;
+    width: var(--admin-sidebar-width);
+    height: 100vh;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2rem;
+    padding: 1.75rem 1.1rem calc(1.5rem + env(safe-area-inset-bottom));
+    border-top: 0;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .admin-sidebar__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-inline: 0.4rem;
+  }
+
+  .admin-sidebar__brand-mark {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.9rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--color-border);
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    color: var(--color-text);
+  }
+
+  .admin-sidebar__brand-label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-text-soft);
+  }
+
+  .admin-sidebar__buttons {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .admin-sidebar__buttons .admin-pane-button {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    min-height: 3rem;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.92rem;
+    gap: 0.7rem;
+  }
 }
 
 .admin-shell-nav__buttons {
@@ -2728,17 +2830,19 @@ body.menu-open .site-header {
 
 .admin-folder-chip__order {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  align-self: center;
+  align-self: stretch;
   flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 999px;
+  gap: 0.15rem;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: 0.9rem;
   border: 1px solid rgba(244, 244, 245, 0.1);
   background: rgba(255, 255, 255, 0.045);
   color: rgba(244, 244, 245, 0.78);
-  font-size: 0.86rem;
+  font-size: 0.72rem;
   font-weight: 600;
   cursor: grab;
   user-select: none;
@@ -2750,6 +2854,21 @@ body.menu-open .site-header {
     border-color 0.2s ease,
     color 0.2s ease,
     transform 0.2s ease;
+}
+
+.admin-folder-chip__grip {
+  width: 16px;
+  height: 16px;
+  opacity: 0.85;
+}
+
+.admin-folder-chip__grip svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-folder-chip__order-number {
+  line-height: 1;
 }
 
 .admin-folder-chip__button {
@@ -3160,12 +3279,40 @@ body.menu-open .site-header {
   animation: adminAssetDropSettle 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.admin-asset-card__media {
+  display: contents;
+}
+
 .admin-asset-card__image {
   aspect-ratio: 3 / 4;
   width: 100%;
   height: 100%;
   object-fit: cover;
   background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-asset-card__kind {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  background: rgba(5, 5, 5, 0.55);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.admin-asset-card__kind svg {
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 2;
 }
 
 .admin-asset-card__content {
@@ -3949,11 +4096,6 @@ body.is-admin-sorting .admin-asset-grid {
     align-items: start;
   }
 
-  .admin-library-filters {
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(170px, 0.7fr) auto;
-    align-items: end;
-  }
-
   .admin-logs-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: end;
@@ -4083,6 +4225,7 @@ body.is-admin-sorting .admin-asset-grid {
   .admin-library-toolbar__left,
   .admin-library-footer {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
   }
 
@@ -4125,7 +4268,6 @@ body.is-admin-sorting .admin-asset-grid {
     text-align: left;
   }
 
-  .admin-library-filters,
   .admin-logs-filters,
   .admin-bulk-form,
   .admin-users-form,
@@ -4133,6 +4275,26 @@ body.is-admin-sorting .admin-asset-grid {
   .admin-user-card__editor,
   .admin-add-stage__fields {
     grid-template-columns: 1fr;
+  }
+
+  .admin-library-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-filter-search,
+  .admin-filter-tag,
+  .admin-filter-type {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .admin-filter-type [data-admin-filter-type-buttons] {
+    justify-content: stretch;
+  }
+
+  .admin-filter-type [data-admin-filter-type-buttons] .admin-choice-chip {
+    flex: 1 1 0;
   }
 
   .admin-logs-filters__actions {

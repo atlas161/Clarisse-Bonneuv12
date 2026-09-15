@@ -247,29 +247,29 @@
         </section>
       </section>
 
-      <section class="container admin-shell" data-admin-shell hidden>
-        <section class="admin-shell-nav admin-panel" aria-label="Navigation de l’administration">
-          <div class="admin-shell-nav__header">
-            <p class="contact-panel__eyebrow">Navigation</p>
-            <h2 class="admin-shell-nav__title">Choisissez un volet</h2>
-            <p class="admin-section-intro">
-              Travaillez depuis la bibliothèque, puis passez aux accès et aux logs si besoin.
-            </p>
+      <section class="admin-shell" data-admin-shell hidden>
+        <nav class="admin-sidebar" aria-label="Navigation de l’administration">
+          <div class="admin-sidebar__brand">
+            <span class="admin-sidebar__brand-mark">CB</span>
+            <span class="admin-sidebar__brand-label">Espace médias</span>
           </div>
-          <div class="admin-shell-nav__buttons" role="tablist" aria-label="Volets de l'administration">
+          <div class="admin-sidebar__buttons" role="tablist" aria-label="Volets de l'administration">
             <button class="admin-pane-button is-active" type="button" role="tab" aria-selected="true" data-admin-pane-button="library">
-              Bibliothèque
+              <i class="admin-pane-button__icon" data-lucide="library" aria-hidden="true"></i>
+              <span>Bibliothèque</span>
             </button>
             <button class="admin-pane-button" type="button" role="tab" aria-selected="false" data-admin-pane-button="access">
-              Accès clients
+              <i class="admin-pane-button__icon" data-lucide="users" aria-hidden="true"></i>
+              <span>Accès clients</span>
             </button>
             <button class="admin-pane-button" type="button" role="tab" aria-selected="false" data-admin-pane-button="logs">
-              Logs
+              <i class="admin-pane-button__icon" data-lucide="list-collapse" aria-hidden="true"></i>
+              <span>Logs</span>
             </button>
           </div>
-        </section>
+        </nav>
 
-        <section class="admin-shell-layout" aria-label="Espace de travail médias">
+        <section class="container admin-shell-layout admin-shell-content" aria-label="Espace de travail médias">
           <div class="admin-shell-main" data-admin-shell-main>
             <section class="admin-studio admin-panel" data-admin-studio-panel aria-labelledby="admin-studio-title">
               <div class="admin-panel__header">
