@@ -580,28 +580,6 @@
 
               <p class="admin-empty" data-admin-assets-empty hidden>Aucun média dans ce dossier pour le moment.</p>
               <div class="admin-asset-grid" data-admin-asset-grid></div>
-              <section class="admin-asset-menu" data-admin-asset-menu hidden aria-label="Actions du media">
-                <button class="button-outline" type="button" data-admin-asset-menu-action="preview">
-                  <i data-lucide="search" aria-hidden="true"></i>
-                  <span>Aperçu</span>
-                </button>
-                <button class="button-outline" type="button" data-admin-asset-menu-action="edit">
-                  <i data-lucide="pencil" aria-hidden="true"></i>
-                  <span>Modifier</span>
-                </button>
-                <button class="button-outline" type="button" data-admin-asset-menu-action="open">
-                  <i data-lucide="folder-open" aria-hidden="true"></i>
-                  <span>Ouvrir</span>
-                </button>
-                <button class="button-outline" type="button" data-admin-asset-menu-action="select">
-                  <i data-lucide="check-check" aria-hidden="true"></i>
-                  <span>Sélectionner</span>
-                </button>
-                <button class="button-outline admin-danger-button" type="button" data-admin-asset-menu-action="delete">
-                  <i data-lucide="trash-2" aria-hidden="true"></i>
-                  <span>Supprimer</span>
-                </button>
-              </section>
               <div class="admin-library-footer" data-admin-pagination hidden>
                 <p class="admin-help" data-admin-pagination-label></p>
                 <button class="button-outline" type="button" data-admin-load-more>Afficher plus</button>
@@ -798,6 +776,10 @@
                   </label>
                   <div class="admin-form__actions">
                     <button class="button-outline admin-primary-button" type="submit">Enregistrer les modifications</button>
+                    <button class="button-outline" type="button" data-admin-preview-open-original>
+                      <i data-lucide="external-link" aria-hidden="true"></i>
+                      <span>Ouvrir l'original</span>
+                    </button>
                     <button class="button-outline admin-danger-button" type="button" data-admin-preview-delete>
                       <i data-lucide="trash-2" aria-hidden="true"></i>
                       <span>Supprimer ce média</span>

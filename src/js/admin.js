@@ -6,6 +6,7 @@ import {
   Clock3,
   Copy,
   createIcons,
+  ExternalLink,
   Film,
   Folder,
   FolderClosed,
@@ -136,6 +137,7 @@ const renderLucideIcons = () => {
       Camera,
       Check,
       GripVertical,
+      ExternalLink,
       Film,
       Library,
       ListCollapse,
@@ -337,8 +339,7 @@ const dom = {
   activeFiltersLabel: document.querySelector('[data-admin-active-filters-label]'),
   assetsEmpty: document.querySelector('[data-admin-assets-empty]'),
   assetGrid: document.querySelector('[data-admin-asset-grid]'),
-  assetMenu: document.querySelector('[data-admin-asset-menu]'),
-  assetMenuActionButtons: document.querySelectorAll('[data-admin-asset-menu-action]'),
+  previewOpenOriginalButton: document.querySelector('[data-admin-preview-open-original]'),
   paginationWrap: document.querySelector('[data-admin-pagination]'),
   paginationLabel: document.querySelector('[data-admin-pagination-label]'),
   loadMoreButton: document.querySelector('[data-admin-load-more]'),
@@ -419,15 +420,11 @@ const state = {
   inlineFolderRenameOriginal: '',
   showAddMenu: false,
   showUploadStage: false,
-  assetMenuKey: null,
-  assetMenuLongPressTimer: null,
-  assetMenuLongPressOrigin: null,
   suppressPreviewUntil: 0,
   assetDropSettleTimer: null,
   folderDropSettleTimer: null,
   folderDragActive: false,
   folderDragSuppressOpenUntil: 0,
-  assetMenuPoint: null,
   logs: [],
   logsFilters: {
     action: '',
@@ -455,8 +452,6 @@ const state = {
   pendingUploadRegisterTimer: null,
 };
 
-const ASSET_MENU_LONG_PRESS_MS = 360;
-const ASSET_MENU_MOVE_TOLERANCE = 12;
 const FOLDER_LIST_LOAD_TIMEOUT_MS = 4500;
 
 const getRoleFromSessionUser = (user) => {
@@ -899,16 +894,6 @@ const setChoiceButtonsValue = (buttons, value) => {
 const hasSelectedFolder = () => Boolean(state.selectedFolder);
 
 const getAssetByKey = (assetKey) => state.assets.find((entry) => getAssetKey(entry) === assetKey) || null;
-
-const getAssetFromEventTarget = (target) => {
-  const card = target instanceof Element ? target.closest('.admin-asset-card[data-asset-key]') : null;
-
-  if (!(card instanceof HTMLElement)) {
-    return null;
-  }
-
-  return getAssetByKey(card.dataset.assetKey || '');
-};
 
 const isValidFolderMode = (mode) => ['none', 'create'].includes(mode);
 
@@ -2835,18 +2820,6 @@ const clearInlineFolderRename = () => {
   dom.libraryTitle.focus();
 };
 
-const closeAssetMenu = () => {
-  state.assetMenuKey = null;
-  state.assetMenuPoint = null;
-
-  if (dom.assetMenu instanceof HTMLElement) {
-    dom.assetMenu.hidden = true;
-    dom.assetMenu.dataset.state = 'closed';
-    dom.assetMenu.style.removeProperty('left');
-    dom.assetMenu.style.removeProperty('top');
-  }
-};
-
 const closeAddMenu = () => {
   state.showAddMenu = false;
 
@@ -3049,7 +3022,6 @@ const deleteAsset = async (asset, triggerButton = null) => {
     if (state.previewAssetKey === assetKey) {
       closePreview();
     }
-    closeAssetMenu();
     await loadFolder(state.currentFolder);
   } catch (error) {
     setStatus(error instanceof Error ? error.message : 'La suppression du média a échoué.', 'error');
@@ -3079,7 +3051,6 @@ const deleteSelectedAssets = async (triggerButton = null) => {
   }
 
   setBusy(triggerButton, true, 'Suppression...');
-  closeAssetMenu();
 
   let successCount = 0;
   let failureCount = 0;
@@ -3123,93 +3094,6 @@ const deleteSelectedAssets = async (triggerButton = null) => {
   }
 
   await loadFolder(state.currentFolder);
-};
-
-const positionFloatingMenu = (menu, clientX, clientY) => {
-  const anchorPoint = {
-    getBoundingClientRect() {
-      return {
-        width: 0,
-        height: 0,
-        x: clientX,
-        y: clientY,
-        top: clientY,
-        right: clientX,
-        bottom: clientY,
-        left: clientX,
-      };
-    },
-  };
-
-  return computePosition(anchorPoint, menu, {
-    strategy: 'fixed',
-    placement: 'bottom-start',
-    middleware: [
-      offset(12),
-      flip({
-        padding: 14,
-      }),
-      shift({
-        padding: 14,
-      }),
-    ],
-  }).then(({ x, y }) => {
-    menu.style.left = `${x}px`;
-    menu.style.top = `${y}px`;
-  });
-};
-
-const openAssetMenu = (asset, clientX, clientY) => {
-  if (!(dom.assetMenu instanceof HTMLElement) || !asset) {
-    return;
-  }
-
-
-  state.assetMenuKey = getAssetKey(asset);
-  state.assetMenuPoint = {
-    x: clientX,
-    y: clientY,
-  };
-  dom.assetMenu.hidden = false;
-  dom.assetMenu.dataset.state = 'open';
-  dom.assetMenu.style.left = '0px';
-  dom.assetMenu.style.top = '0px';
-  window.requestAnimationFrame(() => {
-    if (!(dom.assetMenu instanceof HTMLElement) || dom.assetMenu.hidden) {
-      return;
-    }
-
-    positionFloatingMenu(dom.assetMenu, clientX, clientY);
-  });
-};
-
-const clearAssetMenuLongPress = () => {
-  if (state.assetMenuLongPressTimer) {
-    window.clearTimeout(state.assetMenuLongPressTimer);
-  }
-
-  state.assetMenuLongPressTimer = null;
-  state.assetMenuLongPressOrigin = null;
-};
-
-const shouldIgnoreAssetCardPress = (target) =>
-  target instanceof Element && Boolean(target.closest('input, label, a, button'));
-
-const scheduleAssetMenuLongPress = (event, asset) => {
-  if (!asset || event.pointerType === 'mouse' || shouldIgnoreAssetCardPress(event.target)) {
-    return;
-  }
-
-  clearAssetMenuLongPress();
-  state.assetMenuLongPressOrigin = {
-    x: event.clientX,
-    y: event.clientY,
-  };
-  state.assetMenuLongPressTimer = window.setTimeout(() => {
-    state.suppressPreviewUntil = Date.now() + 450;
-    openAssetMenu(asset, event.clientX + 8, event.clientY + 8);
-    clearAssetMenuLongPress();
-  }, ASSET_MENU_LONG_PRESS_MS);
 };
 
 const initLogsDatePickers = () => {
@@ -3266,7 +3150,6 @@ const syncFolderDrivenUI = () => {
   const showUploadStage = isReady && state.showUploadStage;
 
   if (showUploadStage) {
-    closeAssetMenu();
   }
 
   if (dom.mediaStage) {
@@ -3517,8 +3400,6 @@ const renderUsers = () => {
     dom.usersPanel?.setAttribute('hidden', 'true');
     return;
   }
-
-  dom.usersPanel?.removeAttribute('hidden');
 
   if (!Array.isArray(state.users) || state.users.length === 0) {
     const empty = document.createElement('p');
@@ -4482,7 +4363,6 @@ const loadFolder = async (folder = config.rootFolder) => {
     state.folderSearchQuery = '';
     state.folderSearchActiveIndex = -1;
     state.showAddMenu = false;
-    closeAssetMenu();
     state.inlineFolderRenameActive = false;
     state.inlineFolderRenameSaving = false;
     setFolderSearchPanelOpen(false);
@@ -5395,39 +5275,12 @@ const bindEvents = () => {
     setStatus("L'ajout a été refermé pour ce dossier.", 'info');
   });
 
-  dom.assetMenuActionButtons.forEach((button) => {
-    button.addEventListener('click', async () => {
-      const asset = state.assets.find((entry) => getAssetKey(entry) === state.assetMenuKey);
+  dom.previewOpenOriginalButton?.addEventListener('click', () => {
+    const asset = state.previewAssetKey ? getAssetByKey(state.previewAssetKey) : null;
 
-      if (!asset) {
-        closeAssetMenu();
-        return;
-      }
-
-      const action = button.getAttribute('data-admin-asset-menu-action');
-
-      if (action === 'preview' || action === 'edit') {
-        openPreview(asset);
-        closeAssetMenu();
-        return;
-      }
-
-      if (action === 'open') {
-        window.open(asset.secureUrl, '_blank', 'noopener,noreferrer');
-        closeAssetMenu();
-        return;
-      }
-
-      if (action === 'select') {
-        toggleAssetSelection(getAssetKey(asset));
-        closeAssetMenu();
-        return;
-      }
-
-      if (action === 'delete') {
-        await deleteAsset(asset, button instanceof HTMLButtonElement ? button : null);
-      }
-    });
+    if (asset?.secureUrl) {
+      window.open(asset.secureUrl, '_blank', 'noopener,noreferrer');
+    }
   });
 
   dom.paneButtons.forEach((button) => {
@@ -5586,13 +5439,6 @@ const bindEvents = () => {
 
     if (
       target instanceof Node &&
-      !(dom.assetMenu instanceof HTMLElement && dom.assetMenu.contains(target))
-    ) {
-      closeAssetMenu();
-    }
-
-    if (
-      target instanceof Node &&
       !(dom.logsActionPicker instanceof HTMLElement && dom.logsActionPicker.contains(target))
     ) {
       setLogsActionMenuOpen(false);
@@ -5601,30 +5447,9 @@ const bindEvents = () => {
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-      closeAssetMenu();
       setLogsActionMenuOpen(false);
     }
   });
-
-  window.addEventListener('resize', () => {
-    closeAssetMenu();
-  });
-
-  window.addEventListener(
-    'scroll',
-    () => {
-      closeAssetMenu();
-    },
-    true
-  );
-
-  window.addEventListener(
-    'touchmove',
-    () => {
-      closeAssetMenu();
-    },
-    { capture: true, passive: true }
-  );
 
   dom.deleteFolderButton?.addEventListener('click', async () => {
     if (!state.currentFolder || state.currentFolder === config.rootFolder) {
@@ -5912,95 +5737,6 @@ const bindEvents = () => {
     } finally {
       setBusy(submitButton, false, 'Filtrage...');
     }
-  });
-
-  dom.assetGrid?.addEventListener(
-    'mousedown',
-    (event) => {
-      const asset = getAssetFromEventTarget(event.target);
-
-      if (!asset) {
-        return;
-      }
-
-    },
-    { capture: true }
-  );
-
-  dom.assetGrid?.addEventListener(
-    'mouseup',
-    (event) => {
-      if (event.button !== 2) {
-        return;
-      }
-
-      const asset = getAssetFromEventTarget(event.target);
-
-      if (!asset) {
-        return;
-      }
-
-
-      event.preventDefault();
-      event.stopPropagation();
-      openAssetMenu(asset, event.clientX + 4, event.clientY + 4);
-    },
-    { capture: true }
-  );
-
-  dom.assetGrid?.addEventListener(
-    'contextmenu',
-    (event) => {
-      const asset = getAssetFromEventTarget(event.target);
-
-      if (!asset) {
-        return;
-      }
-
-
-      event.preventDefault();
-      event.stopPropagation();
-      openAssetMenu(asset, event.clientX + 4, event.clientY + 4);
-    },
-    { capture: true }
-  );
-
-  dom.assetGrid?.addEventListener(
-    'pointerdown',
-    (event) => {
-      const asset = getAssetFromEventTarget(event.target);
-
-      if (!asset) {
-        return;
-      }
-
-      scheduleAssetMenuLongPress(event, asset);
-    },
-    { capture: true }
-  );
-
-  dom.assetGrid?.addEventListener(
-    'pointermove',
-    (event) => {
-      if (!state.assetMenuLongPressOrigin) {
-        return;
-      }
-
-      const movedX = Math.abs(event.clientX - state.assetMenuLongPressOrigin.x);
-      const movedY = Math.abs(event.clientY - state.assetMenuLongPressOrigin.y);
-
-      if (movedX > ASSET_MENU_MOVE_TOLERANCE || movedY > ASSET_MENU_MOVE_TOLERANCE) {
-        clearAssetMenuLongPress();
-      }
-    },
-    { capture: true }
-  );
-
-  ['pointerup', 'pointercancel', 'dragstart', 'scroll'].forEach((eventName) => {
-    dom.assetGrid?.addEventListener(eventName, clearAssetMenuLongPress, {
-      capture: true,
-      passive: eventName === 'scroll',
-    });
   });
 
   dom.logsActionTrigger?.addEventListener('click', (event) => {
