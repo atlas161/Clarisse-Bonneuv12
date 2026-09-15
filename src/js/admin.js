@@ -319,6 +319,8 @@ const dom = {
   selectionDockCount: document.querySelector('[data-admin-selection-dock-count]'),
   previewSelectionButton: document.querySelector('[data-admin-preview-selection]'),
   clearSelectionDockButton: document.querySelector('[data-admin-clear-selection-dock]'),
+  deleteSelectionButton: document.querySelector('[data-admin-delete-selection]'),
+  previewDeleteButton: document.querySelector('[data-admin-preview-delete]'),
   selectionCount: document.querySelector('[data-admin-selection-count]'),
   bulkForm: document.querySelector('[data-admin-bulk-form]'),
   libraryGate: document.querySelector('[data-admin-library-gate]'),
@@ -3056,6 +3058,73 @@ const deleteAsset = async (asset, triggerButton = null) => {
   }
 };
 
+const deleteSelectedAssets = async (triggerButton = null) => {
+  const selectedItems = state.assets.filter((asset) => state.selectedAssetKeys.has(getAssetKey(asset)));
+
+  if (selectedItems.length === 0) {
+    return;
+  }
+
+  const count = selectedItems.length;
+  const confirmed = await confirmDangerAction({
+    eyebrow: 'Suppression média',
+    title: count > 1 ? `Supprimer ${count} médias ?` : 'Supprimer ce média ?',
+    message: 'Les médias sélectionnés seront supprimés définitivement de la bibliothèque et du portfolio.',
+    target: count > 1 ? `${count} médias sélectionnés` : getAssetDisplayName(selectedItems[0]),
+    confirmLabel: count > 1 ? `Supprimer ${count} médias` : 'Supprimer le média',
+  });
+
+  if (!confirmed) {
+    return;
+  }
+
+  setBusy(triggerButton, true, 'Suppression...');
+  closeAssetMenu();
+
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const asset of selectedItems) {
+    const assetKey = getAssetKey(asset);
+    setStatus(`Suppression des médias en cours... (${successCount + failureCount + 1}/${count})`, 'info');
+
+    try {
+      await apiRequest(getAdminApiPath('assets'), {
+        method: 'DELETE',
+        body: {
+          folder: state.currentFolder,
+          publicId: asset.publicId,
+          resourceType: asset.resourceType,
+          assetSource: asset.assetSource,
+        },
+      });
+      successCount += 1;
+      state.selectedAssetKeys.delete(assetKey);
+      if (state.previewAssetKey === assetKey) {
+        closePreview();
+      }
+    } catch (error) {
+      failureCount += 1;
+    }
+  }
+
+  setBusy(triggerButton, false, 'Suppression...');
+
+  if (failureCount === 0) {
+    setStatus(
+      successCount > 1 ? `${successCount} médias ont été supprimés avec succès.` : 'Le média a été supprimé avec succès.',
+      'success'
+    );
+  } else {
+    setStatus(
+      `${successCount} média${successCount > 1 ? 's' : ''} supprimé${successCount > 1 ? 's' : ''}, ${failureCount} échec${failureCount > 1 ? 's' : ''}.`,
+      successCount > 0 ? 'info' : 'error'
+    );
+  }
+
+  await loadFolder(state.currentFolder);
+};
+
 const positionFloatingMenu = (menu, clientX, clientY) => {
   const anchorPoint = {
     getBoundingClientRect() {
@@ -5549,6 +5618,14 @@ const bindEvents = () => {
     true
   );
 
+  window.addEventListener(
+    'touchmove',
+    () => {
+      closeAssetMenu();
+    },
+    { capture: true, passive: true }
+  );
+
   dom.deleteFolderButton?.addEventListener('click', async () => {
     if (!state.currentFolder || state.currentFolder === config.rootFolder) {
       return;
@@ -6055,6 +6132,22 @@ const bindEvents = () => {
 
     if (firstSelected) {
       openPreview(firstSelected);
+    }
+  });
+
+  dom.deleteSelectionButton?.addEventListener('click', () => {
+    void deleteSelectedAssets(dom.deleteSelectionButton);
+  });
+
+  dom.previewDeleteButton?.addEventListener('click', () => {
+    if (!state.previewAssetKey) {
+      return;
+    }
+
+    const asset = getAssetByKey(state.previewAssetKey);
+
+    if (asset) {
+      void deleteAsset(asset, dom.previewDeleteButton);
     }
   });
 

@@ -560,17 +560,6 @@
                 </div>
               </section>
 
-              <div class="admin-selection-dock" data-admin-selection-dock hidden>
-                <div>
-                  <strong data-admin-selection-dock-count>0 média sélectionné</strong>
-                  <p class="admin-help">Ouvrez rapidement un média de la sélection ou videz-la en un clic.</p>
-                </div>
-                <div class="admin-selection-dock__actions">
-                  <button class="button-outline" type="button" data-admin-preview-selection>Ouvrir le premier sélectionné</button>
-                  <button class="button-outline" type="button" data-admin-clear-selection-dock>Vider la sélection</button>
-                </div>
-              </div>
-
               <form class="admin-form admin-bulk-form" data-admin-bulk-form hidden>
                 <label class="contact-field">
                   <input type="text" name="alt" autocomplete="off" placeholder="Alt FR sélection" />
@@ -736,6 +725,27 @@
         </section>
       </section>
 
+      <div class="admin-selection-dock" data-admin-selection-dock hidden>
+        <div>
+          <strong data-admin-selection-dock-count>0 média sélectionné</strong>
+          <p class="admin-help">Supprimez la sélection, ouvrez rapidement un média ou videz la sélection.</p>
+        </div>
+        <div class="admin-selection-dock__actions">
+          <button class="button-outline admin-danger-button" type="button" data-admin-delete-selection aria-label="Supprimer la sélection" title="Supprimer">
+            <i data-lucide="trash-2" aria-hidden="true"></i>
+            <span>Supprimer</span>
+          </button>
+          <button class="button-outline" type="button" data-admin-preview-selection aria-label="Ouvrir le premier média sélectionné" title="Ouvrir">
+            <i data-lucide="search" aria-hidden="true"></i>
+            <span>Ouvrir</span>
+          </button>
+          <button class="button-outline" type="button" data-admin-clear-selection-dock aria-label="Vider la sélection" title="Vider">
+            <i data-lucide="x" aria-hidden="true"></i>
+            <span>Vider</span>
+          </button>
+        </div>
+      </div>
+
       <section class="admin-preview" data-admin-preview hidden aria-hidden="true">
         <div class="admin-preview__backdrop" data-admin-preview-close></div>
         <div class="admin-preview__viewport">
@@ -788,6 +798,10 @@
                   </label>
                   <div class="admin-form__actions">
                     <button class="button-outline admin-primary-button" type="submit">Enregistrer les modifications</button>
+                    <button class="button-outline admin-danger-button" type="button" data-admin-preview-delete>
+                      <i data-lucide="trash-2" aria-hidden="true"></i>
+                      <span>Supprimer ce média</span>
+                    </button>
                   </div>
                 </form>
               </section>

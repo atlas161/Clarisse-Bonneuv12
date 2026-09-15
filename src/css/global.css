@@ -3117,19 +3117,78 @@ body.has-admin-shell .admin-page {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 1.05rem;
-  border: 1px solid rgba(244, 244, 245, 0.08);
-  border-radius: 1.35rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 74%),
-    rgba(15, 15, 18, 0.68);
 }
 
 .admin-selection-dock__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.admin-selection-dock__actions .admin-danger-button {
+  order: -1;
+}
+
+body.has-admin-shell .admin-selection-dock:not([hidden]) {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--admin-bottombar-height) + env(safe-area-inset-bottom));
+  z-index: 55;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+  border: 1px solid rgba(244, 244, 245, 0.1);
+  border-width: 1px 0 0;
+  border-radius: 0;
+  background: rgba(11, 11, 12, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 0.85rem calc(0.75rem + env(safe-area-inset-left)) 0.85rem calc(0.75rem + env(safe-area-inset-right));
+}
+
+body.has-admin-shell .admin-selection-dock:not([hidden]) .admin-help {
+  display: none;
+}
+
+body.has-admin-shell .admin-selection-dock__actions {
+  flex-wrap: nowrap;
+  gap: 0.6rem;
+}
+
+body.has-admin-shell .admin-selection-dock__actions .button-outline {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+body.has-admin-shell .admin-selection-dock__actions .button-outline {
+  justify-content: center;
+  padding-inline: 0.5rem;
+}
+
+body.has-admin-shell .admin-selection-dock__actions .button-outline span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  body.has-admin-shell .admin-selection-dock__actions .button-outline span {
+    display: none;
+  }
+
+  body.has-admin-shell .admin-selection-dock__actions .button-outline {
+    gap: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  body.has-admin-shell .admin-selection-dock:not([hidden]) {
+    left: var(--admin-sidebar-width);
+    bottom: 0;
+    border-width: 1px 0 0;
+    padding: 1rem 1.5rem;
+  }
 }
 
 .admin-bulk-form {
@@ -3341,8 +3400,8 @@ body.has-admin-shell .admin-page {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 999px;
   background: rgba(10, 10, 12, 0.62);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
@@ -4321,8 +4380,6 @@ body.is-admin-sorting .admin-asset-grid {
   .admin-users-form__role .admin-choice-group,
   .admin-current-folder-card__actions,
   .admin-library-summary__heading,
-  .admin-selection-dock,
-  .admin-selection-dock__actions,
   .admin-user-card__actions {
     display: grid;
     width: 100%;
