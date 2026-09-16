@@ -1,9 +1,12 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { getPool, query } from './db.js';
+import { createClient } from '@supabase/supabase-js';
 
 const STORE_PATH = path.join(process.cwd(), 'server', 'admin-folder-store.json');
+const SUPABASE_FOLDER_TABLE = String(process.env.SUPABASE_FOLDER_TABLE || 'admin_tracked_folders').trim();
 let warnedReadOnlyStore = false;
+let supabaseFolderClient = null;
+let supabaseFolderClientResolved = false;
 
 const isReadOnlyStoreError = (error) =>
   Boolean(error) &&
@@ -45,6 +48,31 @@ const uniqueFolderPaths = (entries) => {
     });
 
   return Array.from(unique.values());
+};
+
+const getSupabaseFolderClient = () => {
+  if (supabaseFolderClientResolved) {
+    return supabaseFolderClient;
+  }
+
+  supabaseFolderClientResolved = true;
+
+  const url = String(process.env.SUPABASE_URL || '').trim();
+  const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+
+  if (!url || !serviceRoleKey) {
+    supabaseFolderClient = null;
+    return supabaseFolderClient;
+  }
+
+  supabaseFolderClient = createClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  return supabaseFolderClient;
 };
 
 const getDefaultFolders = () => {
@@ -93,9 +121,16 @@ const sortFolderRows = (rows) =>
   });
 
 const readStore = async () => {
-  if (getPool()) {
-    const { rows } = await query('SELECT path, sort_order, created_at FROM admin_tracked_folders', []);
-    const storedPaths = uniqueFolderPaths(sortFolderRows(rows).map((row) => normalizePath(row?.path)));
+  const supabase = getSupabaseFolderClient();
+
+  if (supabase) {
+    const { data, error } = await supabase.from(SUPABASE_FOLDER_TABLE).select('path, sort_order, created_at');
+
+    if (error) {
+      throw error;
+    }
+
+    const storedPaths = uniqueFolderPaths(sortFolderRows(data).map((row) => normalizePath(row?.path)));
 
     return {
       folders: storedPaths.length > 0 ? storedPaths : getDefaultFolders(),
@@ -127,46 +162,41 @@ const writeStore = async (payload) => {
     folders: uniqueFolderPaths(payload.folders || []),
   };
 
-  if (getPool()) {
+  const supabase = getSupabaseFolderClient();
+
+  if (supabase) {
     const rows = nextPayload.folders.map((folderPath, index) => ({
       path: folderPath,
       parent_path: getParentPath(folderPath),
       sort_order: index,
     }));
+    const { data: existingRows, error: existingError } = await supabase.from(SUPABASE_FOLDER_TABLE).select('path');
 
-    const pool = getPool();
-    const client = await pool.connect();
+    if (existingError) {
+      throw existingError;
+    }
 
-    try {
-      await client.query('BEGIN');
+    if (rows.length > 0) {
+      const { error: upsertError } = await supabase.from(SUPABASE_FOLDER_TABLE).upsert(rows, {
+        onConflict: 'path',
+      });
 
-      const { rows: existingRows } = await client.query('SELECT path FROM admin_tracked_folders', []);
-
-      for (const row of rows) {
-        await client.query(
-          `INSERT INTO admin_tracked_folders (path, parent_path, sort_order)
-           VALUES ($1, $2, $3)
-           ON CONFLICT (path)
-           DO UPDATE SET parent_path = EXCLUDED.parent_path, sort_order = EXCLUDED.sort_order`,
-          [row.path, row.parent_path, row.sort_order]
-        );
+      if (upsertError) {
+        throw upsertError;
       }
+    }
 
-      const nextPathSet = new Set(rows.map((row) => row.path));
-      const pathsToDelete = existingRows
-        .map((row) => normalizePath(row?.path))
-        .filter((folderPath) => folderPath && !nextPathSet.has(folderPath));
+    const nextPathSet = new Set(rows.map((row) => row.path));
+    const pathsToDelete = (existingRows || [])
+      .map((row) => normalizePath(row?.path))
+      .filter((folderPath) => folderPath && !nextPathSet.has(folderPath));
 
-      if (pathsToDelete.length > 0) {
-        await client.query('DELETE FROM admin_tracked_folders WHERE path = ANY($1::text[])', [pathsToDelete]);
+    if (pathsToDelete.length > 0) {
+      const { error: deleteError } = await supabase.from(SUPABASE_FOLDER_TABLE).delete().in('path', pathsToDelete);
+
+      if (deleteError) {
+        throw deleteError;
       }
-
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
     }
 
     return true;
@@ -278,29 +308,20 @@ export const reorderTrackedSubfolders = async (parentFolder, orderedFolderPaths)
     ...siblingFolders.filter((entry) => !normalizedOrderedPaths.includes(entry)),
   ];
 
-  if (getPool()) {
-    const pool = getPool();
-    const client = await pool.connect();
+  const supabase = getSupabaseFolderClient();
+  if (supabase) {
+    const reorderRows = nextSiblingOrder.map((folderPath, index) => ({
+      path: folderPath,
+      parent_path: normalizedParent,
+      sort_order: index,
+    }));
 
-    try {
-      await client.query('BEGIN');
+    const { error } = await supabase.from(SUPABASE_FOLDER_TABLE).upsert(reorderRows, {
+      onConflict: 'path',
+    });
 
-      for (const [index, folderPath] of nextSiblingOrder.entries()) {
-        await client.query(
-          `INSERT INTO admin_tracked_folders (path, parent_path, sort_order)
-           VALUES ($1, $2, $3)
-           ON CONFLICT (path)
-           DO UPDATE SET parent_path = EXCLUDED.parent_path, sort_order = EXCLUDED.sort_order`,
-          [folderPath, normalizedParent, index]
-        );
-      }
-
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
+    if (error) {
       throw error;
-    } finally {
-      client.release();
     }
 
     return;

@@ -1,11 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { getPool, query } from './db.js';
+import { createClient } from '@supabase/supabase-js';
 
 const storePath = path.join(process.cwd(), 'server', 'external-media-store.json');
+const SUPABASE_EXTERNAL_MEDIA_TABLE = String(process.env.SUPABASE_EXTERNAL_MEDIA_TABLE || 'admin_external_media').trim();
 const EXTERNAL_MEDIA_DEBUG_HTTP_ENABLED = String(process.env.ADMIN_DEBUG_HTTP || '').trim().toLowerCase() === 'true';
 
+let supabaseExternalMediaClient = null;
+let supabaseExternalMediaClientResolved = false;
 let warnedReadOnlyStore = false;
 
 // #region debug-point C:external-store-reporter
@@ -55,7 +58,7 @@ const warnReadOnlyStore = () => {
   }
 
   warnedReadOnlyStore = true;
-  console.warn('[external-media-store] Local external media store is read-only; configure Netlify DB persistence for production.');
+  console.warn('[external-media-store] Local external media store is read-only; configure Supabase persistence for production.');
 };
 
 const ensureStoreShape = (payload) => {
@@ -101,7 +104,32 @@ const sortExternalItems = (items) =>
     return rightDate - leftDate;
   });
 
-const toDbRow = (item) => ({
+const getSupabaseExternalMediaClient = () => {
+  if (supabaseExternalMediaClientResolved) {
+    return supabaseExternalMediaClient;
+  }
+
+  supabaseExternalMediaClientResolved = true;
+
+  const url = String(process.env.SUPABASE_URL || '').trim();
+  const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+
+  if (!url || !serviceRoleKey) {
+    supabaseExternalMediaClient = null;
+    return supabaseExternalMediaClient;
+  }
+
+  supabaseExternalMediaClient = createClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  return supabaseExternalMediaClient;
+};
+
+const toSupabaseRow = (item) => ({
   id: String(item.id),
   type: 'youtube',
   folder: normalizePath(item.folder),
@@ -115,7 +143,7 @@ const toDbRow = (item) => ({
   created_at: sanitizeText(item.createdAt) || new Date().toISOString(),
 });
 
-const fromDbRow = (row) => ({
+const fromSupabaseRow = (row) => ({
   id: String(row?.id || ''),
   type: 'youtube',
   folder: normalizePath(row?.folder),
@@ -175,9 +203,14 @@ const writeStore = async (payload) => {
   return nextPayload;
 };
 
-const readRemoteItems = async (text, params) => {
-  const { rows } = await query(text, params);
-  return sortExternalItems(rows.map((row) => fromDbRow(row)));
+const readRemoteItems = async (builder) => {
+  const { data, error } = await builder;
+
+  if (error) {
+    throw new Error(error.message || 'Impossible de lire les videos externes depuis Supabase.');
+  }
+
+  return sortExternalItems((data || []).map((row) => fromSupabaseRow(row)));
 };
 
 const getYoutubeIdFromUrl = (value) => {
@@ -223,8 +256,10 @@ const isValidYoutubeId = (value) => /^[a-zA-Z0-9_-]{11}$/.test(String(value || '
 export const getExternalMediaStorePath = () => storePath;
 
 export const getExternalMediaItems = async () => {
-  if (getPool()) {
-    return readRemoteItems('SELECT * FROM admin_external_media', []);
+  const supabase = getSupabaseExternalMediaClient();
+
+  if (supabase) {
+    return readRemoteItems(supabase.from(SUPABASE_EXTERNAL_MEDIA_TABLE).select('*'));
   }
 
   const payload = await readStore();
@@ -233,9 +268,10 @@ export const getExternalMediaItems = async () => {
 
 export const listExternalMediaByFolder = async (folder) => {
   const normalizedFolder = normalizePath(folder);
+  const supabase = getSupabaseExternalMediaClient();
 
-  if (getPool()) {
-    return readRemoteItems('SELECT * FROM admin_external_media WHERE folder = $1', [normalizedFolder]);
+  if (supabase) {
+    return readRemoteItems(supabase.from(SUPABASE_EXTERNAL_MEDIA_TABLE).select('*').eq('folder', normalizedFolder));
   }
 
   const items = await getExternalMediaItems();
@@ -244,12 +280,15 @@ export const listExternalMediaByFolder = async (folder) => {
 
 export const listExternalMediaByRoot = async (root) => {
   const normalizedRoot = normalizePath(root);
+  const supabase = getSupabaseExternalMediaClient();
 
-  if (getPool()) {
-    return readRemoteItems('SELECT * FROM admin_external_media WHERE folder = $1 OR folder LIKE $2', [
-      normalizedRoot,
-      `${normalizedRoot}/%`,
-    ]);
+  if (supabase) {
+    return readRemoteItems(
+      supabase
+        .from(SUPABASE_EXTERNAL_MEDIA_TABLE)
+        .select('*')
+        .or(`folder.eq.${normalizedRoot},folder.like.${normalizedRoot}/%`)
+    );
   }
 
   const items = await getExternalMediaItems();
@@ -268,7 +307,7 @@ export const createExternalYoutubeItem = async ({ folder, url, title, alt, altEn
     hasAlt: Boolean(sanitizeText(alt)),
     hasAltEn: Boolean(sanitizeText(altEn)),
     tagCount: Array.isArray(tags) ? tags.length : 0,
-    persistence: getPool() ? 'netlify-db' : 'local-json',
+    persistence: getSupabaseExternalMediaClient() ? 'supabase' : 'local-json',
   });
   // #endregion
 
@@ -294,29 +333,20 @@ export const createExternalYoutubeItem = async ({ folder, url, title, alt, altEn
     createdAt: new Date().toISOString(),
   };
 
-  if (getPool()) {
-    const row = toDbRow(item);
-    const { rows } = await query(
-      `INSERT INTO admin_external_media
-         (id, type, folder, url, youtube_id, title, alt, alt_en, tags, sort_order, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       RETURNING *`,
-      [
-        row.id,
-        row.type,
-        row.folder,
-        row.url,
-        row.youtube_id,
-        row.title,
-        row.alt,
-        row.alt_en,
-        row.tags,
-        row.sort_order,
-        row.created_at,
-      ]
-    );
+  const supabase = getSupabaseExternalMediaClient();
 
-    return fromDbRow(rows[0]);
+  if (supabase) {
+    const { data, error } = await supabase
+      .from(SUPABASE_EXTERNAL_MEDIA_TABLE)
+      .insert(toSupabaseRow(item))
+      .select('*')
+      .single();
+
+    if (error) {
+      throw new Error(error.message || 'Impossible d enregistrer la video externe dans Supabase.');
+    }
+
+    return fromSupabaseRow(data);
   }
 
   const payload = await readStore();
@@ -327,15 +357,29 @@ export const createExternalYoutubeItem = async ({ folder, url, title, alt, altEn
 
 export const deleteExternalMediaItem = async (id) => {
   const normalizedId = sanitizeText(id);
+  const supabase = getSupabaseExternalMediaClient();
 
-  if (getPool()) {
-    const { rows } = await query('SELECT id FROM admin_external_media WHERE id = $1', [normalizedId]);
+  if (supabase) {
+    const { data: existingItem, error: lookupError } = await supabase
+      .from(SUPABASE_EXTERNAL_MEDIA_TABLE)
+      .select('id')
+      .eq('id', normalizedId)
+      .maybeSingle();
 
-    if (!rows[0]?.id) {
+    if (lookupError) {
+      throw new Error(lookupError.message || 'Impossible de verifier la video externe dans Supabase.');
+    }
+
+    if (!existingItem?.id) {
       throw new Error('Le media externe est introuvable.');
     }
 
-    await query('DELETE FROM admin_external_media WHERE id = $1', [normalizedId]);
+    const { error } = await supabase.from(SUPABASE_EXTERNAL_MEDIA_TABLE).delete().eq('id', normalizedId);
+
+    if (error) {
+      throw new Error(error.message || 'Impossible de supprimer la video externe depuis Supabase.');
+    }
+
     return;
   }
 
@@ -351,57 +395,43 @@ export const deleteExternalMediaItem = async (id) => {
 
 export const updateExternalMediaItem = async (id, updates = {}) => {
   const normalizedId = sanitizeText(id);
+  const supabase = getSupabaseExternalMediaClient();
 
-  if (getPool()) {
-    const setClauses = [];
-    const params = [];
+  if (supabase) {
+    const remoteUpdates = {};
 
     if (Object.prototype.hasOwnProperty.call(updates, 'order')) {
-      params.push(parseManualOrder(updates.order));
-      setClauses.push(`sort_order = $${params.length}`);
+      remoteUpdates.sort_order = parseManualOrder(updates.order);
     }
 
     if (Object.prototype.hasOwnProperty.call(updates, 'alt')) {
-      params.push(sanitizeText(updates.alt));
-      setClauses.push(`alt = $${params.length}`);
+      remoteUpdates.alt = sanitizeText(updates.alt);
     }
 
     if (Object.prototype.hasOwnProperty.call(updates, 'altEn')) {
-      params.push(sanitizeText(updates.altEn));
-      setClauses.push(`alt_en = $${params.length}`);
+      remoteUpdates.alt_en = sanitizeText(updates.altEn);
     }
 
     if (Object.prototype.hasOwnProperty.call(updates, 'title')) {
-      params.push(sanitizeText(updates.title));
-      setClauses.push(`title = $${params.length}`);
+      remoteUpdates.title = sanitizeText(updates.title);
     }
 
     if (Object.prototype.hasOwnProperty.call(updates, 'tags')) {
-      params.push(Array.isArray(updates.tags) ? updates.tags.map((tag) => sanitizeText(tag)).filter(Boolean) : []);
-      setClauses.push(`tags = $${params.length}`);
+      remoteUpdates.tags = Array.isArray(updates.tags) ? updates.tags.map((tag) => sanitizeText(tag)).filter(Boolean) : [];
     }
 
-    if (setClauses.length === 0) {
-      const { rows } = await query('SELECT * FROM admin_external_media WHERE id = $1', [normalizedId]);
+    const { data, error } = await supabase
+      .from(SUPABASE_EXTERNAL_MEDIA_TABLE)
+      .update(remoteUpdates)
+      .eq('id', normalizedId)
+      .select('*')
+      .single();
 
-      if (!rows[0]) {
-        throw new Error('Le media externe est introuvable.');
-      }
-
-      return fromDbRow(rows[0]);
+    if (error) {
+      throw new Error(error.message || 'Impossible de mettre a jour la video externe dans Supabase.');
     }
 
-    params.push(normalizedId);
-    const { rows } = await query(
-      `UPDATE admin_external_media SET ${setClauses.join(', ')} WHERE id = $${params.length} RETURNING *`,
-      params
-    );
-
-    if (!rows[0]) {
-      throw new Error('Le media externe est introuvable.');
-    }
-
-    return fromDbRow(rows[0]);
+    return fromSupabaseRow(data);
   }
 
   const payload = await readStore();
@@ -443,7 +473,9 @@ export const renameExternalMediaFolder = async (fromFolder, toFolder) => {
     return;
   }
 
-  if (getPool()) {
+  const supabase = getSupabaseExternalMediaClient();
+
+  if (supabase) {
     const items = await listExternalMediaByRoot(normalizedFrom);
     const impactedItems = items.filter(
       (item) => item.folder === normalizedFrom || item.folder.startsWith(`${normalizedFrom}/`)
@@ -451,12 +483,15 @@ export const renameExternalMediaFolder = async (fromFolder, toFolder) => {
 
     await Promise.all(
       impactedItems.map((item) =>
-        query('UPDATE admin_external_media SET folder = $1 WHERE id = $2', [
-          item.folder === normalizedFrom
-            ? normalizedTo
-            : `${normalizedTo}${item.folder.slice(normalizedFrom.length)}`,
-          item.id,
-        ])
+        supabase
+          .from(SUPABASE_EXTERNAL_MEDIA_TABLE)
+          .update({
+            folder:
+              item.folder === normalizedFrom
+                ? normalizedTo
+                : `${normalizedTo}${item.folder.slice(normalizedFrom.length)}`,
+          })
+          .eq('id', item.id)
       )
     );
     return;
@@ -488,11 +523,15 @@ export const reorderExternalMediaItems = async (items) => {
     id: sanitizeText(item?.id),
     order: parseManualOrder(item?.order) ?? index,
   }));
-  if (getPool()) {
+  const supabase = getSupabaseExternalMediaClient();
+
+  if (supabase) {
     await Promise.all(
       normalizedItems
         .filter((item) => item.id)
-        .map((item) => query('UPDATE admin_external_media SET sort_order = $1 WHERE id = $2', [item.order, item.id]))
+        .map((item) =>
+          supabase.from(SUPABASE_EXTERNAL_MEDIA_TABLE).update({ sort_order: item.order }).eq('id', item.id)
+        )
     );
     return;
   }

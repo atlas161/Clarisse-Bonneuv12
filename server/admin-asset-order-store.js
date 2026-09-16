@@ -1,4 +1,8 @@
-import { getPool, query } from './db.js';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_ASSET_ORDER_TABLE = String(process.env.SUPABASE_ASSET_ORDER_TABLE || 'admin_asset_orders').trim();
+let supabaseClient = null;
+let supabaseClientResolved = false;
 
 const normalizePath = (value) =>
   String(value || '')
@@ -7,8 +11,35 @@ const normalizePath = (value) =>
     .replace(/^\/+|\/+$/g, '')
     .trim();
 
+const getSupabaseClient = () => {
+  if (supabaseClientResolved) {
+    return supabaseClient;
+  }
+
+  supabaseClientResolved = true;
+
+  const url = String(process.env.SUPABASE_URL || '').trim();
+  const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+
+  if (!url || !serviceRoleKey) {
+    supabaseClient = null;
+    return supabaseClient;
+  }
+
+  supabaseClient = createClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  return supabaseClient;
+};
+
 export const listAssetOrdersByFolder = async (folderPath) => {
-  if (!getPool()) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
     return new Map();
   }
 
@@ -18,13 +49,17 @@ export const listAssetOrdersByFolder = async (folderPath) => {
     return new Map();
   }
 
-  const { rows } = await query(
-    'SELECT public_id, sort_order FROM admin_asset_orders WHERE folder_path = $1',
-    [normalizedFolder]
-  );
+  const { data, error } = await supabase
+    .from(SUPABASE_ASSET_ORDER_TABLE)
+    .select('public_id, sort_order')
+    .eq('folder_path', normalizedFolder);
+
+  if (error) {
+    throw error;
+  }
 
   const map = new Map();
-  rows.forEach((row) => {
+  (Array.isArray(data) ? data : []).forEach((row) => {
     const publicId = normalizePath(row?.public_id);
     const order = Number(row?.sort_order);
     if (!publicId || !Number.isFinite(order)) {
@@ -37,7 +72,9 @@ export const listAssetOrdersByFolder = async (folderPath) => {
 };
 
 export const listAssetOrderEntriesByFolder = async (folderPath) => {
-  if (!getPool()) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
     return [];
   }
 
@@ -47,12 +84,18 @@ export const listAssetOrderEntriesByFolder = async (folderPath) => {
     return [];
   }
 
-  const { rows } = await query(
-    'SELECT public_id, sort_order FROM admin_asset_orders WHERE folder_path = $1 ORDER BY sort_order ASC, updated_at DESC',
-    [normalizedFolder]
-  );
+  const { data, error } = await supabase
+    .from(SUPABASE_ASSET_ORDER_TABLE)
+    .select('public_id, sort_order')
+    .eq('folder_path', normalizedFolder)
+    .order('sort_order', { ascending: true })
+    .order('updated_at', { ascending: false });
 
-  return rows
+  if (error) {
+    throw error;
+  }
+
+  return (Array.isArray(data) ? data : [])
     .map((row) => ({
       publicId: normalizePath(row?.public_id),
       sortOrder: Number(row?.sort_order),
@@ -61,7 +104,9 @@ export const listAssetOrderEntriesByFolder = async (folderPath) => {
 };
 
 export const listAssetOrdersByRoot = async (rootPath) => {
-  if (!getPool()) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
     return new Map();
   }
 
@@ -71,13 +116,17 @@ export const listAssetOrdersByRoot = async (rootPath) => {
     return new Map();
   }
 
-  const { rows } = await query(
-    'SELECT public_id, sort_order FROM admin_asset_orders WHERE folder_path LIKE $1',
-    [`${normalizedRoot}/%`]
-  );
+  const { data, error } = await supabase
+    .from(SUPABASE_ASSET_ORDER_TABLE)
+    .select('public_id, sort_order')
+    .like('folder_path', `${normalizedRoot}/%`);
+
+  if (error) {
+    throw error;
+  }
 
   const map = new Map();
-  rows.forEach((row) => {
+  (Array.isArray(data) ? data : []).forEach((row) => {
     const publicId = normalizePath(row?.public_id);
     const order = Number(row?.sort_order);
     if (!publicId || !Number.isFinite(order)) {
@@ -90,7 +139,9 @@ export const listAssetOrdersByRoot = async (rootPath) => {
 };
 
 export const listAssetAssignmentsByRoot = async (rootPath) => {
-  if (!getPool()) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
     return new Map();
   }
 
@@ -100,13 +151,17 @@ export const listAssetAssignmentsByRoot = async (rootPath) => {
     return new Map();
   }
 
-  const { rows } = await query(
-    'SELECT folder_path, public_id, sort_order FROM admin_asset_orders WHERE folder_path LIKE $1',
-    [`${normalizedRoot}/%`]
-  );
+  const { data, error } = await supabase
+    .from(SUPABASE_ASSET_ORDER_TABLE)
+    .select('folder_path, public_id, sort_order')
+    .like('folder_path', `${normalizedRoot}/%`);
+
+  if (error) {
+    throw error;
+  }
 
   const map = new Map();
-  rows.forEach((row) => {
+  (Array.isArray(data) ? data : []).forEach((row) => {
     const publicId = normalizePath(row?.public_id);
     const folderPath = normalizePath(row?.folder_path);
     const order = Number(row?.sort_order);
@@ -120,8 +175,10 @@ export const listAssetAssignmentsByRoot = async (rootPath) => {
 };
 
 export const saveAssetOrderForFolder = async (folderPath, orderedItems) => {
-  if (!getPool()) {
-    throw new Error('Database is not configured for asset order storage.');
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
+    throw new Error('Supabase is not configured for asset order storage.');
   }
 
   const normalizedFolder = normalizePath(folderPath);
@@ -148,50 +205,52 @@ export const saveAssetOrderForFolder = async (folderPath, orderedItems) => {
     throw new Error('Ordered items list is empty.');
   }
 
-  const pool = getPool();
-  const client = await pool.connect();
+  const rows = normalizedItems.map((entry) => ({
+    folder_path: normalizedFolder,
+    public_id: entry.publicId,
+    sort_order: entry.sortOrder,
+    updated_at: new Date().toISOString(),
+  }));
 
-  try {
-    await client.query('BEGIN');
+  const { data: existingRows, error: existingError } = await supabase
+    .from(SUPABASE_ASSET_ORDER_TABLE)
+    .select('public_id')
+    .eq('folder_path', normalizedFolder);
 
-    const { rows: existingRows } = await client.query(
-      'SELECT public_id FROM admin_asset_orders WHERE folder_path = $1',
-      [normalizedFolder]
-    );
+  if (existingError) {
+    throw existingError;
+  }
 
-    for (const entry of normalizedItems) {
-      await client.query(
-        `INSERT INTO admin_asset_orders (folder_path, public_id, sort_order, updated_at)
-         VALUES ($1, $2, $3, now())
-         ON CONFLICT (folder_path, public_id)
-         DO UPDATE SET sort_order = EXCLUDED.sort_order, updated_at = EXCLUDED.updated_at`,
-        [normalizedFolder, entry.publicId, entry.sortOrder]
-      );
+  const { error: upsertError } = await supabase.from(SUPABASE_ASSET_ORDER_TABLE).upsert(rows, {
+    onConflict: 'folder_path,public_id',
+  });
+
+  if (upsertError) {
+    throw upsertError;
+  }
+
+  const nextPublicIdSet = new Set(rows.map((row) => row.public_id));
+  const publicIdsToDelete = (existingRows || [])
+    .map((row) => normalizePath(row?.public_id))
+    .filter((publicId) => publicId && !nextPublicIdSet.has(publicId));
+
+  if (publicIdsToDelete.length > 0) {
+    const { error: deleteError } = await supabase
+      .from(SUPABASE_ASSET_ORDER_TABLE)
+      .delete()
+      .eq('folder_path', normalizedFolder)
+      .in('public_id', publicIdsToDelete);
+
+    if (deleteError) {
+      throw deleteError;
     }
-
-    const nextPublicIdSet = new Set(normalizedItems.map((entry) => entry.publicId));
-    const publicIdsToDelete = existingRows
-      .map((row) => normalizePath(row?.public_id))
-      .filter((publicId) => publicId && !nextPublicIdSet.has(publicId));
-
-    if (publicIdsToDelete.length > 0) {
-      await client.query(
-        'DELETE FROM admin_asset_orders WHERE folder_path = $1 AND public_id = ANY($2::text[])',
-        [normalizedFolder, publicIdsToDelete]
-      );
-    }
-
-    await client.query('COMMIT');
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
   }
 };
 
 export const getAssetOrder = async (folderPath, publicId) => {
-  if (!getPool()) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
     return null;
   }
 
@@ -202,17 +261,25 @@ export const getAssetOrder = async (folderPath, publicId) => {
     return null;
   }
 
-  const { rows } = await query(
-    'SELECT sort_order FROM admin_asset_orders WHERE folder_path = $1 AND public_id = $2',
-    [normalizedFolder, normalizedPublicId]
-  );
+  const { data, error } = await supabase
+    .from(SUPABASE_ASSET_ORDER_TABLE)
+    .select('sort_order')
+    .eq('folder_path', normalizedFolder)
+    .eq('public_id', normalizedPublicId)
+    .maybeSingle();
 
-  const order = Number(rows[0]?.sort_order);
+  if (error) {
+    throw error;
+  }
+
+  const order = Number(data?.sort_order);
   return Number.isFinite(order) ? order : null;
 };
 
 export const renameAssetOrderFolderPrefix = async (fromFolder, toFolder) => {
-  if (!getPool()) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
     return;
   }
 
@@ -223,10 +290,20 @@ export const renameAssetOrderFolderPrefix = async (fromFolder, toFolder) => {
     return;
   }
 
-  const { rows } = await query(
-    'SELECT folder_path, public_id, sort_order FROM admin_asset_orders WHERE folder_path = $1 OR folder_path LIKE $2',
-    [normalizedFrom, `${normalizedFrom}/%`]
-  );
+  const [baseResponse, nestedResponse] = await Promise.all([
+    supabase.from(SUPABASE_ASSET_ORDER_TABLE).select('folder_path, public_id, sort_order').eq('folder_path', normalizedFrom),
+    supabase.from(SUPABASE_ASSET_ORDER_TABLE).select('folder_path, public_id, sort_order').like('folder_path', `${normalizedFrom}/%`),
+  ]);
+
+  if (baseResponse.error) {
+    throw baseResponse.error;
+  }
+
+  if (nestedResponse.error) {
+    throw nestedResponse.error;
+  }
+
+  const rows = [...(Array.isArray(baseResponse.data) ? baseResponse.data : []), ...(Array.isArray(nestedResponse.data) ? nestedResponse.data : [])];
 
   if (rows.length === 0) {
     return;
@@ -253,42 +330,43 @@ export const renameAssetOrderFolderPrefix = async (fromFolder, toFolder) => {
         return null;
       }
 
-      return { folder_path: nextFolderPath, public_id: publicId, sort_order: sortOrder };
+      return {
+        folder_path: nextFolderPath,
+        public_id: publicId,
+        sort_order: sortOrder,
+        updated_at: new Date().toISOString(),
+      };
     })
     .filter(Boolean);
 
-  const pool = getPool();
-  const client = await pool.connect();
+  if (nextRows.length > 0) {
+    const { error: upsertError } = await supabase.from(SUPABASE_ASSET_ORDER_TABLE).upsert(nextRows, {
+      onConflict: 'folder_path,public_id',
+    });
 
-  try {
-    await client.query('BEGIN');
-
-    for (const row of nextRows) {
-      await client.query(
-        `INSERT INTO admin_asset_orders (folder_path, public_id, sort_order, updated_at)
-         VALUES ($1, $2, $3, now())
-         ON CONFLICT (folder_path, public_id)
-         DO UPDATE SET sort_order = EXCLUDED.sort_order, updated_at = EXCLUDED.updated_at`,
-        [row.folder_path, row.public_id, row.sort_order]
-      );
+    if (upsertError) {
+      throw upsertError;
     }
+  }
 
-    await client.query('DELETE FROM admin_asset_orders WHERE folder_path = $1 OR folder_path LIKE $2', [
-      normalizedFrom,
-      `${normalizedFrom}/%`,
-    ]);
+  const [{ error: deleteBaseError }, { error: deleteNestedError }] = await Promise.all([
+    supabase.from(SUPABASE_ASSET_ORDER_TABLE).delete().eq('folder_path', normalizedFrom),
+    supabase.from(SUPABASE_ASSET_ORDER_TABLE).delete().like('folder_path', `${normalizedFrom}/%`),
+  ]);
 
-    await client.query('COMMIT');
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
+  if (deleteBaseError) {
+    throw deleteBaseError;
+  }
+
+  if (deleteNestedError) {
+    throw deleteNestedError;
   }
 };
 
 export const deleteAssetOrder = async (folderPath, publicId) => {
-  if (!getPool()) {
+  const supabase = getSupabaseClient();
+
+  if (!supabase) {
     return;
   }
 
@@ -299,8 +377,13 @@ export const deleteAssetOrder = async (folderPath, publicId) => {
     return;
   }
 
-  await query('DELETE FROM admin_asset_orders WHERE folder_path = $1 AND public_id = $2', [
-    normalizedFolder,
-    normalizedPublicId,
-  ]);
+  const { error } = await supabase
+    .from(SUPABASE_ASSET_ORDER_TABLE)
+    .delete()
+    .eq('folder_path', normalizedFolder)
+    .eq('public_id', normalizedPublicId);
+
+  if (error) {
+    throw error;
+  }
 };
