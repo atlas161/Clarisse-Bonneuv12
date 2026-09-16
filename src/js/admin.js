@@ -42,6 +42,10 @@ import 'flatpickr/dist/themes/dark.css';
 import '../css/flatpickr-admin.css';
 import Sortable from 'sortablejs';
 
+// =============================================================================
+// UTILITIES — pure helpers with no DOM/state access, safe to reuse anywhere.
+// =============================================================================
+
 const getMetaContent = (name) => document.querySelector(`meta[name="${name}"]`)?.getAttribute('content')?.trim() || '';
 
 const normalizePath = (value) =>
@@ -88,6 +92,10 @@ const createContextString = (entries) =>
     .filter(([, value]) => String(value || '').trim() !== '')
     .map(([key, value]) => `${key}=${String(value).replace(/[|=]/g, ' ').trim()}`)
     .join('|');
+
+// =============================================================================
+// CONFIGURATION & DOM CACHE — read once at load: page meta, element refs, icons.
+// =============================================================================
 
 const config = {
   supabaseUrl: getMetaContent('supabase-url'),
@@ -360,6 +368,10 @@ const dom = {
   confirmSubmitButton: document.querySelector('[data-admin-confirm-submit]'),
 };
 
+// =============================================================================
+// APPLICATION STATE — single mutable object driving every render below.
+// =============================================================================
+
 const state = {
   supabase: null,
   session: null,
@@ -453,6 +465,11 @@ const state = {
 };
 
 const FOLDER_LIST_LOAD_TIMEOUT_MS = 4500;
+
+// =============================================================================
+// AUTHENTICATION & 2FA/MFA — Supabase session, password gate, factor enrollment.
+// Business logic only; do not change behavior here without care.
+// =============================================================================
 
 const getRoleFromSessionUser = (user) => {
   const role = String(user?.app_metadata?.role || '').trim().toLowerCase();
@@ -793,6 +810,10 @@ const bindPinInput = (wrap) => {
   });
 };
 
+// =============================================================================
+// MEDIA HELPERS — pure functions describing/keying/sorting a single asset.
+// =============================================================================
+
 const getAssetKey = (asset) => `${asset.assetSource || 'cloudinary'}:${asset.publicId}`;
 
 const getAssetKind = (asset) => {
@@ -896,6 +917,10 @@ const hasSelectedFolder = () => Boolean(state.selectedFolder);
 const getAssetByKey = (assetKey) => state.assets.find((entry) => getAssetKey(entry) === assetKey) || null;
 
 const isValidFolderMode = (mode) => ['none', 'create'].includes(mode);
+
+// =============================================================================
+// FOLDERS & PORTFOLIOS — folder tree, search, dialogs, portfolio switching.
+// =============================================================================
 
 const getFolderDisplayName = (folderPath) => {
   const normalized = normalizePath(folderPath);
@@ -1831,6 +1856,10 @@ const AUDIT_TARGET_TYPE_LABELS = {
   gallery: 'Galerie',
   session: 'Session',
 };
+
+// =============================================================================
+// AUDIT LOGS — formatting and rendering of the activity log entries.
+// =============================================================================
 
 const formatAuditAction = (value) => {
   const action = String(value || '').trim();
@@ -3389,6 +3418,10 @@ const createBadge = (text, modifier = '') => {
   return badge;
 };
 
+// =============================================================================
+// CLIENT ACCOUNTS — user list rendering and account management.
+// =============================================================================
+
 const renderUsers = () => {
   if (!dom.userList) {
     return;
@@ -4846,6 +4879,10 @@ const closeMfaGate = async ({ returnToShell = false, allowSkip = false } = {}) =
   showAuth();
 };
 
+// =============================================================================
+// EVENT BINDINGS — every DOM listener is wired here, once, at startup.
+// =============================================================================
+
 const bindEvents = () => {
   dom.loginForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -6039,6 +6076,10 @@ const bindEvents = () => {
     bindPinInput(wrap);
   });
 };
+
+// =============================================================================
+// BOOTSTRAP — entry point: creates the Supabase client and starts the session.
+// =============================================================================
 
 const init = async () => {
   if (!config.supabaseUrl || !config.supabasePublishableKey) {
