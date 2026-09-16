@@ -5,6 +5,7 @@ dist/
 .dbg/
 .tmp-debug-youtube-ok/
 supabase/.temp/
+.netlify/
 server/admin-audit-log-store.json
 server/admin-folder-store.json
 server/external-media-store.json

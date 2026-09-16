@@ -1,68 +1,14 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { createClient } from '@supabase/supabase-js';
+import { getPool, query } from './db.js';
 
 const STORE_PATH = path.resolve(process.cwd(), 'server', 'admin-audit-log-store.json');
-const SUPABASE_AUDIT_TABLE = String(process.env.SUPABASE_ADMIN_AUDIT_TABLE || 'admin_audit_logs').trim();
-const SUPABASE_FETCH_TIMEOUT_MS = (() => {
-  const raw = Number.parseInt(String(process.env.SUPABASE_FETCH_TIMEOUT_MS || '6000'), 10);
-  if (!Number.isFinite(raw) || raw <= 0) {
-    return 6000;
-  }
-  return Math.min(Math.max(raw, 2000), 9000);
-})();
-
-const createTimeoutSignal = (signal, timeoutMs) => {
-  const controller = new AbortController();
-
-  const onAbort = () => {
-    controller.abort(signal?.reason);
-  };
-
-  if (signal) {
-    if (signal.aborted) {
-      controller.abort(signal.reason);
-    } else {
-      signal.addEventListener('abort', onAbort, { once: true });
-    }
-  }
-
-  const timeoutId = setTimeout(() => {
-    controller.abort(new Error('timeout'));
-  }, timeoutMs);
-
-  return {
-    signal: controller.signal,
-    cleanup: () => {
-      clearTimeout(timeoutId);
-      if (signal) {
-        signal.removeEventListener('abort', onAbort);
-      }
-    },
-  };
-};
-
-const fetchWithTimeout = async (input, init = {}) => {
-  const timeoutMs = Number.isFinite(init?.timeoutMs) ? init.timeoutMs : SUPABASE_FETCH_TIMEOUT_MS;
-  const { signal, cleanup } = createTimeoutSignal(init?.signal, timeoutMs);
-
-  try {
-    return await fetch(input, {
-      ...init,
-      signal,
-    });
-  } finally {
-    cleanup();
-  }
-};
 
 const DEFAULT_PAYLOAD = {
   entries: [],
   dedupeKeys: {},
 };
 
-let supabaseAuditClient = null;
-let supabaseAuditClientResolved = false;
 let warnedReadOnlyStore = false;
 
 const isReadOnlyStoreError = (error) =>
@@ -114,34 +60,6 @@ const writeStore = async (payload) => {
   }
 };
 
-const getSupabaseAuditClient = () => {
-  if (supabaseAuditClientResolved) {
-    return supabaseAuditClient;
-  }
-
-  supabaseAuditClientResolved = true;
-
-  const url = String(process.env.SUPABASE_URL || '').trim();
-  const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-
-  if (!url || !serviceRoleKey) {
-    supabaseAuditClient = null;
-    return supabaseAuditClient;
-  }
-
-  supabaseAuditClient = createClient(url, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-    global: {
-      fetch: fetchWithTimeout,
-    },
-  });
-
-  return supabaseAuditClient;
-};
-
 const normalizeEntry = (entry) => ({
   id: String(entry?.id || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`),
   at: entry?.at || new Date().toISOString(),
@@ -156,21 +74,7 @@ const normalizeEntry = (entry) => ({
   details: entry?.details && typeof entry.details === 'object' ? entry.details : {},
 });
 
-const toSupabaseRow = (entry) => ({
-  id: entry.id,
-  at: entry.at,
-  actor_user_id: entry.actorUserId,
-  actor_name: entry.actorName,
-  actor_email: entry.actorEmail,
-  actor_role: entry.actorRole,
-  action: entry.action,
-  target_type: entry.targetType,
-  target_id: entry.targetId,
-  target_label: entry.targetLabel,
-  details: entry.details,
-});
-
-const fromSupabaseRow = (row) =>
+const fromDbRow = (row) =>
   normalizeEntry({
     id: row?.id,
     at: row?.at,
@@ -267,12 +171,32 @@ export const appendAuditLog = async (entry, options = {}) => {
     return;
   }
 
-  const supabase = getSupabaseAuditClient();
   let storedRemotely = false;
 
-  if (supabase) {
-    const { error } = await supabase.from(SUPABASE_AUDIT_TABLE).insert(toSupabaseRow(normalizedEntry));
-    storedRemotely = !error;
+  if (getPool()) {
+    try {
+      await query(
+        `INSERT INTO admin_audit_logs
+           (id, at, actor_user_id, actor_name, actor_email, actor_role, action, target_type, target_id, target_label, details)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [
+          normalizedEntry.id,
+          normalizedEntry.at,
+          normalizedEntry.actorUserId,
+          normalizedEntry.actorName,
+          normalizedEntry.actorEmail,
+          normalizedEntry.actorRole,
+          normalizedEntry.action,
+          normalizedEntry.targetType,
+          normalizedEntry.targetId,
+          normalizedEntry.targetLabel,
+          normalizedEntry.details,
+        ]
+      );
+      storedRemotely = true;
+    } catch {
+      storedRemotely = false;
+    }
   }
 
   if (!storedRemotely) {
@@ -291,17 +215,15 @@ export const appendAuditLog = async (entry, options = {}) => {
 
 export const listAuditLogs = async (filters = {}) => {
   const normalizedFilters = normalizeLogFilters(filters);
-  const supabase = getSupabaseAuditClient();
 
-  if (supabase) {
-    const { data, error } = await supabase
-      .from(SUPABASE_AUDIT_TABLE)
-      .select('*')
-      .order('at', { ascending: false })
-      .limit(normalizedFilters.limit);
-
-    if (!error && Array.isArray(data)) {
-      return data.map(fromSupabaseRow).filter((entry) => matchesFilters(entry, normalizedFilters));
+  if (getPool()) {
+    try {
+      const { rows } = await query('SELECT * FROM admin_audit_logs ORDER BY at DESC LIMIT $1', [
+        normalizedFilters.limit,
+      ]);
+      return rows.map(fromDbRow).filter((entry) => matchesFilters(entry, normalizedFilters));
+    } catch {
+      // fall through to local store
     }
   }
 
@@ -310,14 +232,8 @@ export const listAuditLogs = async (filters = {}) => {
 };
 
 export const clearAuditLogs = async () => {
-  const supabase = getSupabaseAuditClient();
-
-  if (supabase) {
-    const { error } = await supabase.from(SUPABASE_AUDIT_TABLE).delete().not('id', 'is', null);
-
-    if (error) {
-      throw error;
-    }
+  if (getPool()) {
+    await query('DELETE FROM admin_audit_logs WHERE id IS NOT NULL', []);
   }
 
   await writeStore({

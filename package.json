@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.6",
+    "@netlify/database": "^1.0.0",
     "@supabase/supabase-js": "^2.108.2",
     "cloudinary": "^2.8.0",
     "flatpickr": "^4.6.13",

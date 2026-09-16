@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { getPool, query } from './db.js';
 import {
   createExternalYoutubeItem,
   deleteExternalMediaItem,
@@ -1295,25 +1296,28 @@ const deleteFolder = async (folderPath, portfolioKey = null) => {
     throw new HttpError(400, 'Le dossier racine ne peut pas etre supprime.', 'invalid_folder_delete');
   }
 
-  const supabase = getSupabaseAdmin();
-  const [trackedSubFolders, externalItems, assetOrderProbe, assetMetadataProbe] = await Promise.all([
+  const [trackedSubFolders, externalItems, assetOrderCount, assetMetadataCount] = await Promise.all([
     listTrackedSubfolders(normalizedPath),
     listExternalMediaByFolder(normalizedPath),
-    supabase
-      .from('admin_asset_orders')
-      .select('folder_path', { count: 'exact', head: true })
-      .or(`folder_path.eq.${normalizedPath},folder_path.like.${normalizedPath}/%`),
-    supabase
-      .from('admin_asset_metadata')
-      .select('folder_path', { count: 'exact', head: true })
-      .or(`folder_path.eq.${normalizedPath},folder_path.like.${normalizedPath}/%`),
+    getPool()
+      ? query('SELECT count(*)::int AS count FROM admin_asset_orders WHERE folder_path = $1 OR folder_path LIKE $2', [
+          normalizedPath,
+          `${normalizedPath}/%`,
+        ]).then((result) => result.rows[0]?.count || 0)
+      : 0,
+    getPool()
+      ? query('SELECT count(*)::int AS count FROM admin_asset_metadata WHERE folder_path = $1 OR folder_path LIKE $2', [
+          normalizedPath,
+          `${normalizedPath}/%`,
+        ]).then((result) => result.rows[0]?.count || 0)
+      : 0,
   ]);
 
   if (
     externalItems.length > 0 ||
     trackedSubFolders.length > 0 ||
-    (assetOrderProbe?.count || 0) > 0 ||
-    (assetMetadataProbe?.count || 0) > 0
+    assetOrderCount > 0 ||
+    assetMetadataCount > 0
   ) {
     throw new HttpError(
       409,
@@ -2273,12 +2277,18 @@ const handleAssetRegister = async (req, res) => {
   });
 
   if (rowsToUpsert.length > 0) {
-    const supabase = getSupabaseAdmin();
-    const { error } = await supabase.from('admin_asset_orders').upsert(rowsToUpsert, {
-      onConflict: 'folder_path,public_id',
-    });
-    if (error) {
-      throw error;
+    if (!getPool()) {
+      throw new HttpError(500, 'La configuration de la base de donnees est incomplete.', 'db_config_missing');
+    }
+
+    for (const row of rowsToUpsert) {
+      await query(
+        `INSERT INTO admin_asset_orders (folder_path, public_id, sort_order, updated_at)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (folder_path, public_id)
+         DO UPDATE SET sort_order = EXCLUDED.sort_order, updated_at = EXCLUDED.updated_at`,
+        [row.folder_path, row.public_id, row.sort_order, row.updated_at]
+      );
     }
   }
 
