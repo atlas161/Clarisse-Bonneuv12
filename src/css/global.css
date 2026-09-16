@@ -212,10 +212,12 @@ body.menu-open .site-header {
   gap: 1rem;
 }
 
-.site-nav__desktop {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
+@media (min-width: 768px) {
+  .site-nav__desktop {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
 }
 
 .site-nav__link {
@@ -381,6 +383,13 @@ body.menu-open .site-header {
   max-width: 40rem;
   display: grid;
   gap: 1.5rem;
+}
+
+.hero-copy h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
 }
 
 .hero-copy p {
