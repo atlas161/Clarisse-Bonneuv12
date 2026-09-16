@@ -3825,61 +3825,6 @@ body.admin-folder-dialog-open {
   margin-top: 0;
 }
 
-.admin-asset-menu {
-  position: fixed;
-  z-index: 140;
-  display: grid;
-  gap: 0.45rem;
-  min-width: 210px;
-  padding: 0.75rem;
-  border: 1px solid rgba(244, 244, 245, 0.12);
-  border-radius: 1.2rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 78%),
-    rgba(18, 18, 22, 0.72);
-  box-shadow:
-    0 26px 56px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(24px) saturate(140%);
-  opacity: 0;
-  transform: translateY(4px) scale(0.96);
-  transform-origin: top left;
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
-}
-
-.admin-asset-menu[data-state='open'] {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-.admin-asset-menu .button-outline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  justify-content: flex-start;
-  min-height: 2.5rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.95rem;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.admin-asset-menu .button-outline:hover,
-.admin-asset-menu .button-outline:focus-visible {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.admin-asset-menu .button-outline svg {
-  width: 1rem;
-  height: 1rem;
-  color: rgba(244, 244, 245, 0.82);
-}
-
-.admin-asset-menu .admin-danger-button svg {
-  color: rgba(248, 113, 113, 0.92);
-}
-
 .admin-logs-toolbar {
   display: flex;
   flex-wrap: wrap;
