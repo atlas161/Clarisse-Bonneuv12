@@ -338,6 +338,48 @@ body.menu-open .site-header {
   padding-bottom: var(--space-section);
 }
 
+.breadcrumb {
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.breadcrumb__list li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.breadcrumb__list li:not(:last-child)::after {
+  content: '/';
+  color: var(--color-border-strong);
+}
+
+.breadcrumb__list a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.breadcrumb__list a:hover,
+.breadcrumb__list a:focus-visible {
+  color: var(--color-text-soft);
+  text-decoration: underline;
+}
+
+.breadcrumb__list [aria-current='page'] {
+  color: var(--color-text-soft);
+}
+
 .page-intro {
   display: grid;
   gap: 1.5rem;
