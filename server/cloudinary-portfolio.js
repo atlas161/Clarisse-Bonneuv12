@@ -619,7 +619,7 @@ export const getPortfolioPayload = async (rootInput, localeInput, versionInput) 
     const [imageResources, videoResources, categoryOrderMap, assetAssignmentMap, assetMetadataMap] = await Promise.all([
       fetchAllResources(`${getPortfolioAssetRoot()}/`, 'image'),
       fetchAllResources(`${getPortfolioAssetRoot()}/`, 'video'),
-      getCategoryOrderMap(portfolio),
+      getCategoryOrderMap(portfolio).catch(() => new Map()),
       listAssetAssignmentsByRoot(getPortfolioAssetRoot()).catch(() => new Map()),
       listAssetMetadataByRoot(getPortfolioAssetRoot()).catch(() => new Map()),
     ]);
@@ -633,7 +633,7 @@ export const getPortfolioPayload = async (rootInput, localeInput, versionInput) 
 
       return isPathOwnedByPortfolio(normalizedPublicId, portfolio.key);
     });
-    const externalItems = (await listExternalMediaByRoot(getPortfolioAssetRoot())).filter((item) =>
+    const externalItems = (await listExternalMediaByRoot(getPortfolioAssetRoot()).catch(() => [])).filter((item) =>
       isPathOwnedByPortfolio(item?.folder, portfolio.key)
     );
     const legacyCategoryAliases = buildLegacyCategoryAliasMap(resources, portfolio.logicalRoot, assetAssignmentMap);

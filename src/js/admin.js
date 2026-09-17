@@ -952,7 +952,10 @@ const renderPortfolioSwitcher = () => {
     const isActive = portfolio.key === state.activePortfolioKey;
     button.className = `admin-pane-button${isActive ? ' is-active' : ''}`;
     button.type = 'button';
-    button.textContent = portfolio.label || portfolio.publicName || portfolio.key;
+    const baseLabel = portfolio.label || portfolio.publicName || portfolio.key;
+    button.textContent = portfolio.publicName && portfolio.publicName !== baseLabel
+      ? `${baseLabel} — ${portfolio.publicName}`
+      : baseLabel;
     button.setAttribute('aria-selected', isActive ? 'true' : 'false');
     button.disabled = isActive;
     button.addEventListener('click', () => {
