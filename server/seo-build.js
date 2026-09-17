@@ -495,28 +495,77 @@ const getLastModifiedDate = async (projectRoot, pageKey) => {
   return stats.mtime.toISOString().slice(0, 10);
 };
 
+const ABOUT_IMAGE_PATH = '/images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00.webp';
+
+// Polas are intentionally excluded from the image sitemap and kept out of
+// Google Images (see the noimageindex meta tag on polas pages) — only the
+// main portfolio and site portraits are meant to be publicly searchable.
+const getPageImages = async (pageKey, pageConfig) => {
+  if (pageConfig.pageKind === 'home') {
+    return [
+      {
+        loc: SEO_IMAGE_URL,
+        title: pageConfig.locale === 'en' ? 'Clarisse Bonneu portrait' : 'Portrait de Clarisse Bonneu',
+      },
+    ];
+  }
+
+  if (pageKey === 'a-propos.html' || pageKey === 'en/about.html') {
+    return [
+      {
+        loc: toAbsoluteUrl(ABOUT_IMAGE_PATH),
+        title: pageConfig.locale === 'en' ? 'Clarisse Bonneu studio portrait' : 'Portrait studio de Clarisse Bonneu',
+      },
+    ];
+  }
+
+  if (pageConfig.pageKind === 'portfolio' && pageConfig.portfolioKey === 'main') {
+    const payload = await getPortfolioPayload('main', pageConfig.locale);
+    return (Array.isArray(payload.items) ? payload.items : [])
+      .filter((item) => item.mediaType !== 'video')
+      .map((item) => ({
+        loc: item.fullSrc || item.lightboxSrc || item.src,
+        title: item.alt || 'Clarisse Bonneu',
+      }))
+      .filter((image) => image.loc);
+  }
+
+  return [];
+};
+
 const buildSitemapXml = async (projectRoot) => {
   const entries = await Promise.all(
     Object.entries(PUBLIC_PAGE_CONFIG).map(async ([pageKey, pageConfig]) => ({
       pageConfig,
       lastmod: await getLastModifiedDate(projectRoot, pageKey),
+      images: await getPageImages(pageKey, pageConfig),
     }))
   );
 
   const body = entries
-    .map(
-      ({ pageConfig, lastmod }) => `  <url>
+    .map(({ pageConfig, lastmod, images }) => {
+      const imageTags = images
+        .map(
+          (image) => `
+    <image:image>
+      <image:loc>${escapeHtml(image.loc)}</image:loc>
+      <image:title>${escapeHtml(image.title)}</image:title>
+    </image:image>`
+        )
+        .join('');
+
+      return `  <url>
     <loc>${toAbsoluteUrl(pageConfig.canonicalPath)}</loc>
     <lastmod>${lastmod}</lastmod>
     <xhtml:link rel="alternate" hreflang="fr" href="${toAbsoluteUrl(pageConfig.alternates.fr)}" />
     <xhtml:link rel="alternate" hreflang="en" href="${toAbsoluteUrl(pageConfig.alternates.en)}" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="${toAbsoluteUrl(pageConfig.alternates.xDefault)}" />
-  </url>`
-    )
+    <xhtml:link rel="alternate" hreflang="x-default" href="${toAbsoluteUrl(pageConfig.alternates.xDefault)}" />${imageTags}
+  </url>`;
+    })
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${body}
 </urlset>
 `;
