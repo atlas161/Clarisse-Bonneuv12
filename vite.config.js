@@ -21,15 +21,6 @@ const faviconHeadTags = [
     tag: 'link',
     injectTo: 'head',
     attrs: {
-      rel: 'icon',
-      type: 'image/svg+xml',
-      href: `${FAVICON_BASE_PATH}/favicon.svg`,
-    },
-  },
-  {
-    tag: 'link',
-    injectTo: 'head',
-    attrs: {
       rel: 'shortcut icon',
       href: `${FAVICON_BASE_PATH}/favicon.ico`,
     },
@@ -70,20 +61,6 @@ const faviconHeadPlugin = () => ({
   name: 'favicon-head',
   transformIndexHtml() {
     return faviconHeadTags;
-  },
-});
-
-const cookieConsentHeadPlugin = () => ({
-  name: 'cookie-consent-head',
-  transformIndexHtml() {
-    return [
-      {
-        tag: 'script',
-        injectTo: 'head-prepend',
-        children:
-          "(function(){if(window.__cbCookieConsentDefaultInit){return;}window.__cbCookieConsentDefaultInit=true;window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments);};window.gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',functionality_storage:'granted',security_storage:'granted',wait_for_update:500});})();",
-      },
-    ];
   },
 });
 
@@ -175,7 +152,6 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      cookieConsentHeadPlugin(),
       faviconHeadPlugin(),
       portfolioApiPlugin(),
       portfolioPreviewPlugin(),

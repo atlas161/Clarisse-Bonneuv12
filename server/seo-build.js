@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs';
 import { getPortfolioPayload } from './cloudinary-portfolio.js';
 import { getPortfolioDefinition } from './portfolio-config.js';
 
-const SITE_URL = 'https://clarisse-bonneu.com';
+const SITE_URL = 'https://clarisse-bonneu.fr';
 const SEO_IMAGE_PATH = '/images-public/hero/c1309654e57c09a934f9e78756a2ea1a.webp';
 const SEO_IMAGE_URL = `${SITE_URL}${SEO_IMAGE_PATH}`;
 const SEO_IMAGE_WIDTH = 1200;
@@ -24,6 +24,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'fr',
     canonicalPath: '/a-propos.html',
     pageKind: 'default',
+    pageName: 'À propos',
     alternates: {
       fr: '/a-propos.html',
       en: '/en/about.html',
@@ -34,6 +35,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'fr',
     canonicalPath: '/portfolio.html',
     pageKind: 'portfolio',
+    pageName: 'Portfolio',
     portfolioKey: 'main',
     alternates: {
       fr: '/portfolio.html',
@@ -45,6 +47,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'fr',
     canonicalPath: '/polas.html',
     pageKind: 'portfolio',
+    pageName: 'Polas',
     portfolioKey: 'polas',
     alternates: {
       fr: '/polas.html',
@@ -55,7 +58,8 @@ const PUBLIC_PAGE_CONFIG = {
   'contact.html': {
     locale: 'fr',
     canonicalPath: '/contact.html',
-    pageKind: 'default',
+    pageKind: 'contact',
+    pageName: 'Contact',
     alternates: {
       fr: '/contact.html',
       en: '/en/contact.html',
@@ -66,6 +70,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'fr',
     canonicalPath: '/mentions-legales.html',
     pageKind: 'default',
+    pageName: 'Mentions légales',
     alternates: {
       fr: '/mentions-legales.html',
       en: '/en/legal-notice.html',
@@ -76,6 +81,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'fr',
     canonicalPath: '/politique-confidentialite.html',
     pageKind: 'default',
+    pageName: 'Politique de confidentialité',
     alternates: {
       fr: '/politique-confidentialite.html',
       en: '/en/privacy-policy.html',
@@ -96,6 +102,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'en',
     canonicalPath: '/en/about.html',
     pageKind: 'default',
+    pageName: 'About',
     alternates: {
       fr: '/a-propos.html',
       en: '/en/about.html',
@@ -106,6 +113,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'en',
     canonicalPath: '/en/portfolio.html',
     pageKind: 'portfolio',
+    pageName: 'Portfolio',
     portfolioKey: 'main',
     alternates: {
       fr: '/portfolio.html',
@@ -117,6 +125,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'en',
     canonicalPath: '/en/polas.html',
     pageKind: 'portfolio',
+    pageName: 'Polas',
     portfolioKey: 'polas',
     alternates: {
       fr: '/polas.html',
@@ -127,7 +136,8 @@ const PUBLIC_PAGE_CONFIG = {
   'en/contact.html': {
     locale: 'en',
     canonicalPath: '/en/contact.html',
-    pageKind: 'default',
+    pageKind: 'contact',
+    pageName: 'Contact',
     alternates: {
       fr: '/contact.html',
       en: '/en/contact.html',
@@ -138,6 +148,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'en',
     canonicalPath: '/en/legal-notice.html',
     pageKind: 'default',
+    pageName: 'Legal Notice',
     alternates: {
       fr: '/mentions-legales.html',
       en: '/en/legal-notice.html',
@@ -148,6 +159,7 @@ const PUBLIC_PAGE_CONFIG = {
     locale: 'en',
     canonicalPath: '/en/privacy-policy.html',
     pageKind: 'default',
+    pageName: 'Privacy Policy',
     alternates: {
       fr: '/politique-confidentialite.html',
       en: '/en/privacy-policy.html',
@@ -307,7 +319,12 @@ const createPortfolioItemsMarkup = (payload, locale) =>
     })
     .join('');
 
-const buildPortfolioJsonLd = (pageConfig, payload) => ({
+const buildPortfolioJsonLd = (pageConfig, payload) => [
+  buildPortfolioCollectionJsonLd(pageConfig, payload),
+  buildBreadcrumbJsonLd(pageConfig),
+];
+
+const buildPortfolioCollectionJsonLd = (pageConfig, payload) => ({
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name:
@@ -341,6 +358,66 @@ const buildPortfolioJsonLd = (pageConfig, payload) => ({
   },
 });
 
+const buildBreadcrumbJsonLd = (pageConfig) => {
+  const homePath = pageConfig.locale === 'en' ? '/en/' : '/';
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: pageConfig.locale === 'en' ? 'Home' : 'Accueil',
+        item: toAbsoluteUrl(homePath),
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: pageConfig.pageName || pageConfig.canonicalPath,
+        item: toAbsoluteUrl(pageConfig.canonicalPath),
+      },
+    ],
+  };
+};
+
+const buildDefaultPageJsonLd = (pageConfig) => [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: pageConfig.pageName || 'Clarisse Bonneu',
+    url: toAbsoluteUrl(pageConfig.canonicalPath),
+    inLanguage: pageConfig.locale === 'en' ? 'en' : 'fr',
+    isPartOf: {
+      '@id': `${SITE_URL}#website`,
+    },
+    about: {
+      '@id': `${SITE_URL}#person`,
+    },
+  },
+  buildBreadcrumbJsonLd(pageConfig),
+];
+
+const buildContactPageJsonLd = (pageConfig) => [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    name: pageConfig.pageName || 'Contact',
+    url: toAbsoluteUrl(pageConfig.canonicalPath),
+    inLanguage: pageConfig.locale === 'en' ? 'en' : 'fr',
+    isPartOf: {
+      '@id': `${SITE_URL}#website`,
+    },
+    about: {
+      '@id': `${SITE_URL}#person`,
+    },
+    mainEntity: {
+      '@id': `${SITE_URL}#person`,
+    },
+  },
+  buildBreadcrumbJsonLd(pageConfig),
+];
+
 const buildHomeJsonLd = (pageConfig) => {
   const language = pageConfig.locale === 'en' ? 'en' : 'fr';
   const description =
@@ -366,7 +443,7 @@ const buildHomeJsonLd = (pageConfig) => {
       image: SEO_IMAGE_URL,
       jobTitle: pageConfig.locale === 'en' ? 'Fashion, beauty and editorial model' : 'Mannequin mode, beaute et editorial',
       description,
-      sameAs: ['https://clarissebonneu.book.fr/', 'https://www.instagram.com/bonneu_clarisse'],
+      sameAs: ['https://clarissebonneu.book.fr/', 'https://www.instagram.com/clarisse2604b/'],
     },
   ];
 };
@@ -472,7 +549,11 @@ export const seoHtmlPlugin = (projectRoot) => ({
       return injectHeadJsonLd(nextHtml, buildHomeJsonLd(pageConfig));
     }
 
-    return nextHtml;
+    if (pageConfig.pageKind === 'contact') {
+      return injectHeadJsonLd(nextHtml, buildContactPageJsonLd(pageConfig));
+    }
+
+    return injectHeadJsonLd(nextHtml, buildDefaultPageJsonLd(pageConfig));
   },
 });
 

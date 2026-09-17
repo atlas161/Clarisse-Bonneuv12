@@ -128,31 +128,9 @@ const writeCookieConsent = (consent) => {
   }
 };
 
-const syncGtagConsent = (consent) => {
-  if (!window.dataLayer) {
-    window.dataLayer = [];
-  }
-  if (typeof window.gtag !== 'function') {
-    window.gtag = function () {
-      window.dataLayer.push(arguments);
-    };
-  }
-
-  const analyticsGranted = Boolean(consent?.analytics);
-  const marketingGranted = Boolean(consent?.marketing);
-
-  window.gtag('consent', 'update', {
-    analytics_storage: analyticsGranted ? 'granted' : 'denied',
-    ad_storage: marketingGranted ? 'granted' : 'denied',
-    ad_user_data: marketingGranted ? 'granted' : 'denied',
-    ad_personalization: marketingGranted ? 'granted' : 'denied',
-  });
-};
-
 const initCookieConsent = () => {
   const existing = readCookieConsent();
   if (existing) {
-    syncGtagConsent(existing);
     return;
   }
 
@@ -230,7 +208,6 @@ const initCookieConsent = () => {
 
     const setConsent = (consent) => {
       writeCookieConsent(consent);
-      syncGtagConsent(consent);
       hideBanner();
     };
 
