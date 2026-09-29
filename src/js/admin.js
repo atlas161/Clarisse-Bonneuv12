@@ -4015,6 +4015,7 @@ const renderAssets = () => {
     article.className = 'admin-asset-card';
     article.dataset.assetKey = assetKey;
     article.classList.toggle('is-selected', isSelected);
+    article.classList.toggle('is-incomplete', !isAssetComplete(asset));
     article.classList.toggle('is-sort-enabled', isSortEnabled());
     article.title = getAssetDisplayName(asset);
     const image = document.createElement('img');
@@ -6103,6 +6104,7 @@ const init = async () => {
     },
   });
 
+  document.querySelector('[data-admin-logs-filters-wrap]')?.toggleAttribute('open', window.matchMedia('(min-width: 900px)').matches);
   bindEvents();
   initLogsDatePickers();
   syncMediaKindUI();

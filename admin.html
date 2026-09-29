@@ -2,7 +2,8 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0a0b" />
     <title>Espace Médias Client | Clarisse Bonneu</title>
     <meta
       name="description"
@@ -17,40 +18,48 @@
     <script src="https://upload-widget.cloudinary.com/latest/global/all.js" defer></script>
     <link rel="preconnect" href="https://res.cloudinary.com" />
     <link rel="stylesheet" href="/src/css/global.css?v=admin-refresh-20260917-1" />
+    <link rel="stylesheet" href="/src/css/admin.css?v=admin-redesign-20260929-1" />
     <script type="module" src="/src/js/admin.js?v=admin-refresh-20260917-1"></script>
   </head>
   <body class="site-shell bg-zinc-950 text-zinc-200 antialiased">
     <main class="page-main admin-page" id="content">
-      <section class="container admin-hero" data-admin-hero aria-labelledby="page-title">
-        <div class="admin-hero__copy">
-          <p class="eyebrow">Espace sécurisé</p>
-          <h1 id="page-title">Gestion des médias du portfolio</h1>
-          <p>Ajoutez, organisez et mettez à jour les photos et vidéos du portfolio.</p>
-        </div>
-        <div class="admin-hero__links">
-          <a class="button-outline" href="/portfolio.html" data-admin-public-link>Voir le portfolio actif</a>
-          <a class="button-outline" href="/">Retour au site</a>
-          <div class="admin-hero__icon-actions" data-admin-shell-quick-actions hidden aria-label="Actions rapides">
-            <button class="button-outline admin-icon-button" type="button" data-admin-manage-mfa aria-label="Sécurité 2FA" title="Sécurité 2FA">
-              <i data-lucide="shield" aria-hidden="true"></i>
-            </button>
-            <button class="button-outline admin-icon-button" type="button" data-admin-refresh aria-label="Actualiser" title="Actualiser">
-              <i data-lucide="refresh-cw" aria-hidden="true"></i>
-            </button>
-            <button class="button-outline admin-icon-button" type="button" data-admin-signout aria-label="Se déconnecter" title="Se déconnecter">
-              <i data-lucide="log-out" aria-hidden="true"></i>
-            </button>
+      <header class="admin-hero" data-admin-hero aria-labelledby="page-title">
+        <div class="admin-hero__inner">
+          <div class="admin-hero__copy">
+            <span class="admin-hero__mark" aria-hidden="true">CB</span>
+            <div class="admin-hero__titles">
+              <p class="eyebrow">Espace sécurisé</p>
+              <h1 id="page-title">Gestion des médias</h1>
+              <p class="admin-hero__lead">Ajoutez, organisez et mettez à jour les photos et vidéos du portfolio.</p>
+            </div>
+          </div>
+          <div class="admin-hero__links">
+            <div class="admin-hero__nav">
+              <a class="admin-link-button" href="/portfolio.html" data-admin-public-link>Voir le portfolio actif</a>
+              <a class="admin-link-button" href="/">Retour au site</a>
+            </div>
+            <div class="admin-hero__icon-actions" data-admin-shell-quick-actions hidden aria-label="Actions rapides">
+              <button class="button-outline admin-icon-button" type="button" data-admin-manage-mfa aria-label="Sécurité 2FA" title="Sécurité 2FA">
+                <i data-lucide="shield" aria-hidden="true"></i>
+              </button>
+              <button class="button-outline admin-icon-button" type="button" data-admin-refresh aria-label="Actualiser" title="Actualiser">
+                <i data-lucide="refresh-cw" aria-hidden="true"></i>
+              </button>
+              <button class="button-outline admin-icon-button" type="button" data-admin-signout aria-label="Se déconnecter" title="Se déconnecter">
+                <i data-lucide="log-out" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <section class="container admin-status-wrap" data-admin-status-wrap aria-live="polite">
+      <section class="admin-status-wrap" data-admin-status-wrap aria-live="polite">
         <p class="admin-status" data-admin-status data-state="info">
           Initialisation de l'espace médias...
         </p>
       </section>
 
-      <section class="container admin-auth" data-admin-auth>
+      <section class="admin-auth" data-admin-auth>
         <section class="admin-auth-layout" aria-labelledby="admin-login-title">
           <article class="contact-panel admin-panel admin-auth-card admin-auth-card--intro" data-admin-login-intro>
             <p class="contact-panel__eyebrow">Espace client</p>
@@ -268,9 +277,16 @@
               <span>Logs</span>
             </button>
           </div>
+          <div class="admin-sidebar__account">
+            <span class="admin-sidebar__avatar" aria-hidden="true"><i data-lucide="user-cog"></i></span>
+            <div class="admin-sidebar__account-copy">
+              <strong data-admin-current-email>—</strong>
+              <span data-admin-role-badge>Admin</span>
+            </div>
+          </div>
         </nav>
 
-        <section class="container admin-shell-layout admin-shell-content" aria-label="Espace de travail médias">
+        <section class="admin-shell-layout admin-shell-content" aria-label="Espace de travail médias">
           <div class="admin-shell-main" data-admin-shell-main>
             <section class="admin-studio admin-panel" data-admin-studio-panel aria-labelledby="admin-studio-title">
               <div class="admin-panel__header">
@@ -614,7 +630,7 @@
 
                   <label class="contact-field contact-field--full">
                     <span>Mot de passe (optionnel)</span>
-                    <input type="password" name="password" autocomplete="new-password" placeholder="Laissez vide pour envoyer une invitation" />
+                    <input type="password" name="password" autocomplete="new-password" placeholder="Vide = invitation par email" />
                   </label>
                 </div>
 
@@ -667,6 +683,8 @@
                   <span>Vider les logs</span>
                 </button>
               </div>
+              <details class="admin-logs-filters-wrap" data-admin-logs-filters-wrap>
+              <summary><i data-lucide="list-filter" aria-hidden="true"></i><span>Filtres</span></summary>
               <form class="admin-logs-filters" data-admin-logs-filters-form>
                 <label class="contact-field">
                   <span>Action</span>
@@ -697,6 +715,7 @@
                   <button class="button-outline" type="button" data-admin-reset-logs-filters>Réinitialiser</button>
                 </div>
               </form>
+            </details>
               <div class="admin-logs-summary" data-admin-logs-summary></div>
               <div class="admin-logs-list" data-admin-logs-list></div>
             </section>
