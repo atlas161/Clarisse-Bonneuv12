@@ -594,6 +594,49 @@ body.menu-open .site-header {
   box-shadow: 0 20px 70px rgba(0, 0, 0, 0.22);
 }
 
+/* ---- Pages légales ---- */
+[id] {
+  scroll-margin-top: calc(var(--header-offset) + 1rem);
+}
+
+.legal-grid {
+  margin-top: 2rem;
+}
+
+.legal-grid > article {
+  max-width: 52rem;
+}
+
+.legal-grid > article h2 {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+.legal-grid > article p,
+.legal-grid > article li {
+  color: var(--color-text-muted);
+  line-height: 1.75;
+}
+
+.legal-grid > article a {
+  color: var(--color-text-soft);
+  text-decoration: underline;
+  text-decoration-color: rgba(244, 244, 245, 0.28);
+  text-underline-offset: 0.18em;
+}
+
+.legal-grid > article a:hover,
+.legal-grid > article a:focus-visible {
+  color: var(--color-text);
+}
+
+/* Below the two-column breakpoint, show the form before the details. */
+.contact-panel--form {
+  order: -1;
+}
+
 .contact-panel h2 {
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 0.98;
@@ -1377,6 +1420,16 @@ body.menu-open .site-header {
   font-size: 0.95rem;
 }
 
+.page-intro .pola-note {
+  max-width: 42rem;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid rgba(244, 244, 245, 0.08);
+  border-left: 2px solid var(--color-accent-soft);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.95rem;
+}
+
 .about-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1579,9 +1632,8 @@ body.menu-open .site-header {
     gap: 3rem;
   }
 
-  .contact-layout,
   .contact-form__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
   }
 
   .contact-form > .contact-consent,
@@ -1595,6 +1647,15 @@ body.menu-open .site-header {
 @media (min-width: 1024px) {
   .portfolio-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .contact-layout {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: start;
+  }
+
+  .contact-panel--form {
+    order: 0;
   }
 }
 
