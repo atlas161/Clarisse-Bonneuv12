@@ -17,6 +17,54 @@ X-Frame-Options = "DENY"
 Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
 
+# Content-Security-Policy in REPORT-ONLY mode for public pages (nothing is blocked).
+# Violations are logged by the csp-report function. Once the logs are clean, switch the
+# header name to Content-Security-Policy. The admin page has its own enforced CSP below.
+[[headers]]
+for = "/"
+[headers.values]
+Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.clarity.ms https://c.bing.com; media-src 'self' blob: https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://*.clarity.ms https://c.bing.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri /api/csp-report"
+
+[[headers]]
+for = "/en/*"
+[headers.values]
+Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.clarity.ms https://c.bing.com; media-src 'self' blob: https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://*.clarity.ms https://c.bing.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri /api/csp-report"
+
+[[headers]]
+for = "/index.html"
+[headers.values]
+Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.clarity.ms https://c.bing.com; media-src 'self' blob: https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://*.clarity.ms https://c.bing.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri /api/csp-report"
+
+[[headers]]
+for = "/a-propos*"
+[headers.values]
+Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.clarity.ms https://c.bing.com; media-src 'self' blob: https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://*.clarity.ms https://c.bing.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri /api/csp-report"
+
+[[headers]]
+for = "/portfolio*"
+[headers.values]
+Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.clarity.ms https://c.bing.com; media-src 'self' blob: https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://*.clarity.ms https://c.bing.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri /api/csp-report"
+
+[[headers]]
+for = "/polas*"
+[headers.values]
+Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.clarity.ms https://c.bing.com; media-src 'self' blob: https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://*.clarity.ms https://c.bing.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri /api/csp-report"
+
+[[headers]]
+for = "/contact*"
+[headers.values]
+Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.clarity.ms https://c.bing.com; media-src 'self' blob: https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://*.clarity.ms https://c.bing.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri /api/csp-report"
+
+[[headers]]
+for = "/mentions-legales*"
+[headers.values]
+Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.clarity.ms https://c.bing.com; media-src 'self' blob: https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://*.clarity.ms https://c.bing.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri /api/csp-report"
+
+[[headers]]
+for = "/politique-confidentialite*"
+[headers.values]
+Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://res.cloudinary.com https://i.ytimg.com https://*.clarity.ms https://c.bing.com; media-src 'self' blob: https://res.cloudinary.com; font-src 'self' data:; connect-src 'self' https://*.clarity.ms https://c.bing.com https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; report-uri /api/csp-report"
+
 [[headers]]
 for = "/assets/*"
 [headers.values]
@@ -48,6 +96,11 @@ force = true
 [[redirects]]
 from = "/api/portfolio"
 to = "/.netlify/functions/portfolio-api"
+status = 200
+
+[[redirects]]
+from = "/api/csp-report"
+to = "/.netlify/functions/csp-report"
 status = 200
 
 [[redirects]]
