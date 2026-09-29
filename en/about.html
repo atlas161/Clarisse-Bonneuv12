@@ -195,107 +195,102 @@
 <main class="page-main" id="content">
 <nav class="breadcrumb container" aria-label="Breadcrumb"><ol class="breadcrumb__list"><li><a href="/en/">Home</a></li><li aria-current="page">About</li></ol></nav>
 
-
-
   <section class="container page-intro" aria-labelledby="page-title">
-
     <p class="eyebrow">Profile</p>
-
     <h1 id="page-title">Clarisse Bonneu model profile</h1>
-
     <p>This page presents Clarisse Bonneu's visual universe, background and approach to fashion, beauty and editorial projects.</p>
-
   </section>
 
-
-
-  <section class="container pt-8 md:pt-10 grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-start" aria-label="Professional presentation">
-
-    <figure class="about-media" aria-label="Presentation portrait">
-
+  <section class="container about-layout" aria-label="Professional presentation">
+    <figure class="about-media about-layout__media" aria-label="Presentation portrait">
       <img
-
         src="/images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00.webp"
-
         srcset="
-
           /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00-480w.webp 480w,
           /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00-800w.webp 800w,
           /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00-1200w.webp 1200w,
           /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00.webp 2048w
-
         "
-
-        sizes="(min-width: 1024px) 42vw, 100vw"
-
+        sizes="(min-width: 1024px) 38vw, 100vw"
         width="1200"
-
         height="1691"
-
-        loading="lazy"
-
+        loading="eager"
         decoding="async"
-
+        fetchpriority="high"
         alt="Studio portrait of Clarisse Bonneu"
-
       />
-
     </figure>
 
-
-
-    <div class="space-y-6 text-zinc-300">
-
-      <p>
-
+    <div class="about-copy">
+      <p class="about-lead">
         Clarisse Bonneu develops a visual universe rooted in fashion, beauty and editorial imagery. Through this
-
         portfolio, she aims to show a natural on-camera presence, a clear silhouette and a genuine ability to adapt to
-
         different artistic directions.
-
       </p>
-
       <p>
-
         This profile is intended for model agencies, brands, photo studios, digital productions and creative teams
-
         looking for a model able to support campaigns, lookbooks, social media content, e-commerce shoots and portrait
-
         sessions.
-
       </p>
-
       <p>
-
         Each collaboration is approached with close attention to shooting rhythm, posture consistency, visual precision
-
         and a smooth working process on set as well as in studio environments.
-
       </p>
 
-
-
-      <div class="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-6">
-
-        <p class="eyebrow">Key strengths</p>
-
-        <ul class="space-y-3 text-sm text-zinc-300" role="list">
-
-          <li>Available for editorial shoots, beauty projects, campaigns, lookbooks and brand content.</li>
-
-          <li>Well suited to the needs of agencies, castings, art direction teams and visual productions.</li>
-
-          <li>A portfolio designed to allow a quick reading of series, categories and visual references.</li>
-
-        </ul>
-
+      <div class="hero-profile" role="group" aria-label="Key details">
+        <dl class="profile-stats">
+          <div class="profile-stats__item">
+            <dt>Height</dt>
+            <dd>5'11" (1.80 m)</dd>
+          </div>
+          <div class="profile-stats__item">
+            <dt>Measurements</dt>
+            <dd>78 / 68 / 90</dd>
+          </div>
+          <div class="profile-stats__item">
+            <dt>Hair</dt>
+            <dd>Red</dd>
+          </div>
+          <div class="profile-stats__item">
+            <dt>Eyes</dt>
+            <dd>Blue</dd>
+          </div>
+        </dl>
       </div>
-
     </div>
-
   </section>
 
+  <section class="container home-section" aria-labelledby="about-points-title">
+    <div class="section-heading">
+      <p class="eyebrow">Key strengths</p>
+      <h2 id="about-points-title">What I can bring to your projects</h2>
+    </div>
+    <ul class="home-services about-points" role="list">
+      <li class="home-services__item">
+        <h3>Availability</h3>
+        <p>Available for editorial shoots, beauty projects, campaigns, lookbooks and brand content.</p>
+      </li>
+      <li class="home-services__item">
+        <h3>Versatility</h3>
+        <p>Well suited to the needs of agencies, castings, art direction teams and visual productions.</p>
+      </li>
+      <li class="home-services__item">
+        <h3>Clarity</h3>
+        <p>A portfolio designed to allow a quick reading of series, categories and visual references.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="container home-section" aria-labelledby="about-cta-title">
+    <div class="home-cta">
+      <p class="eyebrow">Let's work together</p>
+      <h2 id="about-cta-title">Explore my work or talk about your project</h2>
+      <div class="home-cta__actions">
+        <a class="button-solid" href="/en/portfolio.html">View portfolio</a>
+        <a class="button-outline" href="/en/contact.html">Get in touch</a>
+      </div>
+    </div>
+  </section>
 </main>
 
 

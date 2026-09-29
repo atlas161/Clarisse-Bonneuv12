@@ -574,6 +574,8 @@ body.menu-open .site-header {
   height: auto;
   display: block;
   object-fit: cover;
+  /* The source photo carries a white border baked into the file: crop it out. */
+  transform: scale(1.14);
 }
 
 .contact-layout {
@@ -1373,6 +1375,57 @@ body.menu-open .site-header {
 .home-services__item p {
   color: var(--color-text-muted);
   font-size: 0.95rem;
+}
+
+.about-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
+  margin-top: 2.5rem;
+  align-items: start;
+}
+
+.about-layout__media {
+  margin: 0;
+  max-width: 28rem;
+}
+
+.about-copy {
+  display: grid;
+  gap: 1.35rem;
+  color: var(--color-text-muted);
+}
+
+.about-lead {
+  font-family: var(--font-heading);
+  font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+  line-height: 1.35;
+  color: var(--color-text-soft);
+}
+
+.about-copy .hero-profile {
+  margin-top: 0.5rem;
+}
+
+.about-copy .profile-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 1024px) {
+  .about-layout {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 4rem;
+  }
+
+  .about-layout__media {
+    position: sticky;
+    top: calc(var(--header-offset) + 1.5rem);
+    max-width: none;
+  }
+
+  .home-services.about-points {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .home-cta {

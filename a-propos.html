@@ -286,156 +286,102 @@
 <main class="page-main" id="content">
 <nav class="breadcrumb container" aria-label="Fil d'Ariane"><ol class="breadcrumb__list"><li><a href="/">Accueil</a></li><li aria-current="page">À propos</li></ol></nav>
 
-
-
-
   <section class="container page-intro" aria-labelledby="page-title">
-
-
     <p class="eyebrow">Profil</p>
-
-
     <h1 id="page-title">Profil mannequin de Clarisse Bonneu</h1>
-
-
     <p>Je présente ici mon univers, mon parcours et la manière dont j'aborde chaque projet mode, beauté et editorial.</p>
-
-
   </section>
 
-
-
-
-
-  <section class="container pt-8 md:pt-10 grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-start" aria-label="Présentation professionnelle">
-
-
-    <figure class="about-media" aria-label="Portrait de présentation">
-
-
+  <section class="container about-layout" aria-label="Présentation professionnelle">
+    <figure class="about-media about-layout__media" aria-label="Portrait de présentation">
       <img
-
-
         src="/images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00.webp"
-
-
         srcset="
-
-
           /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00-480w.webp 480w,
           /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00-800w.webp 800w,
           /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00-1200w.webp 1200w,
           /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00.webp 2048w
-
-
         "
-
-
-        sizes="(min-width: 1024px) 42vw, 100vw"
-
-
+        sizes="(min-width: 1024px) 38vw, 100vw"
         width="1200"
-
-
         height="1691"
-
-
-        loading="lazy"
-
-
+        loading="eager"
         decoding="async"
-
-
+        fetchpriority="high"
         alt="Portrait de Clarisse Bonneu en studio"
-
-
       />
-
-
     </figure>
 
-
-
-
-
-    <div class="space-y-6 text-zinc-300">
-
-
-      <p>
-
-
+    <div class="about-copy">
+      <p class="about-lead">
         Je développe un univers visuel centré sur la mode, la beauté et l'image editoriale. À travers mon portfolio,
-
-
         je souhaite montrer une présence naturelle face à l'objectif, une silhouette lisible et une vraie capacité à
-
-
         m'adapter à différents univers de direction artistique.
-
-
       </p>
-
-
       <p>
-
-
         Je m'adresse aux agences de mannequins, aux marques, aux studios photo, aux productions digitales et aux
-
-
         équipes créatives à la recherche d'un profil capable d'accompagner des campagnes, des lookbooks, des contenus
-
-
         social media, des e-shopings et des prises de vue portrait.
-
-
       </p>
-
-
       <p>
-
-
         J'aborde chaque collaboration avec une attention particulière portée au rythme du shooting, à la cohérence des
-
-
         postures, à la précision du rendu visuel et à la fluidité du travail sur plateau comme en studio.
-
-
       </p>
 
-
-
-
-
-      <div class="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-6">
-
-
-        <p class="eyebrow">Points clés</p>
-
-
-        <ul class="space-y-3 text-sm text-zinc-300" role="list">
-
-
-          <li>Je suis disponible pour les shootings éditoriaux, beauté, campagnes, lookbooks et contenus de marque.</li>
-
-
-          <li>Mon profil s'adapte aux besoins des agences, castings, directions artistiques et productions visuelles.</li>
-
-
-          <li>J'ai conçu ce portfolio pour permettre une lecture rapide de mes séries, catégories et références visuelles.</li>
-
-
-        </ul>
-
-
+      <div class="hero-profile" role="group" aria-label="Informations clés">
+        <dl class="profile-stats">
+          <div class="profile-stats__item">
+            <dt>Taille</dt>
+            <dd>1m80</dd>
+          </div>
+          <div class="profile-stats__item">
+            <dt>Mensurations</dt>
+            <dd>78 / 68 / 90</dd>
+          </div>
+          <div class="profile-stats__item">
+            <dt>Cheveux</dt>
+            <dd>Roux</dd>
+          </div>
+          <div class="profile-stats__item">
+            <dt>Yeux</dt>
+            <dd>Bleus</dd>
+          </div>
+        </dl>
       </div>
-
-
     </div>
-
-
   </section>
 
+  <section class="container home-section" aria-labelledby="about-points-title">
+    <div class="section-heading">
+      <p class="eyebrow">Points clés</p>
+      <h2 id="about-points-title">Ce que je peux apporter à vos projets</h2>
+    </div>
+    <ul class="home-services about-points" role="list">
+      <li class="home-services__item">
+        <h3>Disponibilité</h3>
+        <p>Je suis disponible pour les shootings éditoriaux, beauté, campagnes, lookbooks et contenus de marque.</p>
+      </li>
+      <li class="home-services__item">
+        <h3>Adaptabilité</h3>
+        <p>Mon profil s'adapte aux besoins des agences, castings, directions artistiques et productions visuelles.</p>
+      </li>
+      <li class="home-services__item">
+        <h3>Lisibilité</h3>
+        <p>J'ai conçu ce portfolio pour permettre une lecture rapide de mes séries, catégories et références visuelles.</p>
+      </li>
+    </ul>
+  </section>
 
+  <section class="container home-section" aria-labelledby="about-cta-title">
+    <div class="home-cta">
+      <p class="eyebrow">Collaborons</p>
+      <h2 id="about-cta-title">Découvrez mon travail ou parlons de votre projet</h2>
+      <div class="home-cta__actions">
+        <a class="button-solid" href="/portfolio.html">Voir le portfolio</a>
+        <a class="button-outline" href="/contact.html">Me contacter</a>
+      </div>
+    </div>
+  </section>
 </main>
 
 
