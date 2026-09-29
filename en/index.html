@@ -193,136 +193,173 @@
 
 
 <main class="page-main" id="content">
-
   <section class="hero-section" aria-labelledby="page-title">
-
     <div class="container hero-layout">
-
-      <section class="hero-copy">
-
+      <div class="hero-copy">
         <p class="eyebrow">Fashion &amp; beauty model</p>
-
         <h1 id="page-title">Clarisse Bonneu</h1>
-
         <p>
-
           Clarisse Bonneu is a professional model available for fashion, beauty, editorial, e-commerce and branded
-
           content productions. Her profile combines on-camera presence, a strong silhouette and reliable collaboration
-
           for agencies, brands and creative teams.
-
         </p>
 
-        <div class="hero-profile" aria-label="Measurements and professional details">
-
+        <div class="hero-profile" role="group" aria-label="Measurements and professional details">
           <dl class="profile-stats">
-
             <div class="profile-stats__item">
-
+              <dt>Height</dt>
+              <dd>5'11" (1.80 m)</dd>
+            </div>
+            <div class="profile-stats__item">
               <dt>Measurements</dt>
-
               <dd>78 / 68 / 90</dd>
-
             </div>
-
             <div class="profile-stats__item">
-
               <dt>Cup</dt>
-
               <dd>B</dd>
-
             </div>
-
             <div class="profile-stats__item">
-
-              <dt>Hair</dt>
-
-              <dd>Red</dd>
-
-            </div>
-
-            <div class="profile-stats__item">
-
-              <dt>Eyes</dt>
-
-              <dd>Blue</dd>
-
-            </div>
-
-            <div class="profile-stats__item">
-
               <dt>Shoe size</dt>
-
-              <dd>40</dd>
-
+              <dd>40 (EU)</dd>
             </div>
-
             <div class="profile-stats__item">
-
+              <dt>Hair</dt>
+              <dd>Red</dd>
+            </div>
+            <div class="profile-stats__item">
+              <dt>Eyes</dt>
+              <dd>Blue</dd>
+            </div>
+            <div class="profile-stats__item">
               <dt>Tattoo</dt>
-
               <dd>Yes</dd>
-
             </div>
-
             <div class="profile-stats__item">
-
               <dt>Piercing</dt>
-
               <dd>Yes, subtle</dd>
-
             </div>
-
           </dl>
-
         </div>
 
-        <a class="button-outline" href="/en/portfolio.html">View portfolio</a>
+        <div class="hero-actions">
+          <a class="button-solid" href="/en/portfolio.html">View portfolio</a>
+          <a class="button-outline" href="/en/contact.html">Get in touch</a>
+        </div>
+      </div>
 
-      </section>
-
-
-
-      <section class="hero-media" aria-label="Featured portrait">
-
+      <div class="hero-media">
         <img
-
           class="hero-media__image"
-
           src="/images-public/hero/c1309654e57c09a934f9e78756a2ea1a.webp"
-
           srcset="
-
             /images-public/hero/c1309654e57c09a934f9e78756a2ea1a-480w.webp 480w,
             /images-public/hero/c1309654e57c09a934f9e78756a2ea1a-800w.webp 800w,
             /images-public/hero/c1309654e57c09a934f9e78756a2ea1a-1200w.webp 1200w,
             /images-public/hero/c1309654e57c09a934f9e78756a2ea1a.webp 2000w
-
           "
-
           sizes="(min-width: 1024px) 50vw, 100vw"
-
           width="1200"
-
           height="1600"
-
           alt="Editorial portrait of Clarisse Bonneu"
-
           loading="eager"
-
           decoding="async"
-
           fetchpriority="high"
-
         />
-
-      </section>
-
+      </div>
     </div>
-
   </section>
 
+  <!--home-preview-start-->
+  <section class="home-section container" aria-labelledby="home-preview-title">
+    <div class="section-heading">
+      <p class="eyebrow">Portfolio</p>
+      <h2 id="home-preview-title">A glimpse of my work</h2>
+      <p>A few images from recent series across fashion, beauty and editorial.</p>
+    </div>
+    <div class="home-preview__grid" data-home-preview></div>
+    <a class="button-outline home-section__link" href="/en/portfolio.html">View the full portfolio</a>
+  </section>
+  <!--home-preview-end-->
+
+  <section class="home-section container home-about" aria-labelledby="home-about-title">
+    <figure class="about-media home-about__media">
+      <img
+        src="/images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00.webp"
+        srcset="
+          /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00-480w.webp 480w,
+          /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00-800w.webp 800w,
+          /images-public/a-propos/7c9dd29a009de38f0f7282c9cf997d00-1200w.webp 1200w
+        "
+        sizes="(min-width: 1024px) 30vw, 100vw"
+        width="1200"
+        height="1691"
+        loading="lazy"
+        decoding="async"
+        alt="Studio portrait of Clarisse Bonneu"
+      />
+    </figure>
+    <div class="home-about__copy">
+      <p class="eyebrow">About</p>
+      <h2 id="home-about-title">A natural presence in front of the camera</h2>
+      <p>
+        I build a visual universe centred on fashion, beauty and editorial imagery, with a clear silhouette and a real
+        ability to adapt to different art directions.
+      </p>
+      <p>
+        I approach every collaboration with close attention to shoot pace, pose consistency and smooth work on set as
+        well as in the studio.
+      </p>
+      <a class="button-outline" href="/en/about.html">Learn more</a>
+    </div>
+  </section>
+
+  <section class="home-section container" aria-labelledby="home-services-title">
+    <div class="section-heading">
+      <p class="eyebrow">Collaborations</p>
+      <h2 id="home-services-title">Projects I am available for</h2>
+      <p>
+        I work with agencies, brands, photo studios and creative teams looking for a reliable and versatile profile.
+      </p>
+    </div>
+    <ul class="home-services" role="list">
+      <li class="home-services__item">
+        <h3>Fashion booking</h3>
+        <p>Runway, shootings and presentations for agencies and designers.</p>
+      </li>
+      <li class="home-services__item">
+        <h3>Beauty campaigns</h3>
+        <p>Portraits and beauty visuals for brands and studios.</p>
+      </li>
+      <li class="home-services__item">
+        <h3>Editorial</h3>
+        <p>Editorial series and creative collaborations.</p>
+      </li>
+      <li class="home-services__item">
+        <h3>Lookbook &amp; e-commerce</h3>
+        <p>Product and catalogue shoots with a well-controlled pace.</p>
+      </li>
+      <li class="home-services__item">
+        <h3>Branded content</h3>
+        <p>Social media content and digital productions.</p>
+      </li>
+      <li class="home-services__item">
+        <h3>Casting &amp; press</h3>
+        <p>Castings, press requests and international projects depending on production conditions.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="home-section container" aria-labelledby="home-cta-title">
+    <div class="home-cta">
+      <p class="eyebrow">Contact</p>
+      <h2 id="home-cta-title">A project, a casting, a booking?</h2>
+      <p>Replies are usually sent within 24 to 48 business hours.</p>
+      <div class="home-cta__actions">
+        <a class="button-solid" href="/en/contact.html">Get in touch</a>
+        <a class="home-cta__mail" href="mailto:contact@clarisse-bonneu.fr">contact@clarisse-bonneu.fr</a>
+      </div>
+    </div>
+  </section>
 </main>
 
 

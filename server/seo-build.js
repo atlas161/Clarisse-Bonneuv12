@@ -490,6 +490,56 @@ const preRenderPortfolioPage = async (html, pageConfig) => {
   return injectHeadJsonLd(nextHtml, buildPortfolioJsonLd(pageConfig, payload));
 };
 
+const HOME_PREVIEW_COUNT = 3;
+
+const createHomePreviewMarkup = (items, locale) => {
+  const portfolioHref = locale === 'en' ? '/en/portfolio.html' : '/portfolio.html';
+
+  return items
+    .map((item) => {
+      const imageAttributes = [
+        `src="${escapeAttribute(item.src)}"`,
+        item.srcset ? `srcset="${escapeAttribute(item.srcset)}"` : '',
+        'sizes="(min-width: 768px) 33vw, 78vw"',
+        `width="${escapeAttribute(item.width || 900)}"`,
+        `height="${escapeAttribute(item.height || 1125)}"`,
+        'loading="lazy"',
+        'decoding="async"',
+        `alt="${escapeAttribute(item.alt || 'Clarisse Bonneu')}"`,
+      ]
+        .filter(Boolean)
+        .join(' ');
+
+      return `<a class="home-preview__card" href="${portfolioHref}"><img ${imageAttributes} /></a>`;
+    })
+    .join('');
+};
+
+// Pre-renders a few portfolio photos on the home page. If none are available
+// (e.g. build without Cloudinary access) the whole section is removed rather
+// than shipping an empty block.
+const preRenderHomePreview = async (html, pageConfig) => {
+  let items = [];
+
+  try {
+    const payload = await getPortfolioPayload('main', pageConfig.locale);
+    items = (Array.isArray(payload.items) ? payload.items : [])
+      .filter((item) => item.mediaType !== 'video' && item.src && payload.source !== 'demo')
+      .slice(0, HOME_PREVIEW_COUNT);
+  } catch {
+    items = [];
+  }
+
+  if (items.length === 0) {
+    return html.replace(/<!--home-preview-start-->[\s\S]*?<!--home-preview-end-->/, '');
+  }
+
+  return html.replace(
+    /(<div[^>]*data-home-preview[^>]*>)(<\/div>)/i,
+    `$1${createHomePreviewMarkup(items, pageConfig.locale)}$2`
+  );
+};
+
 const getLastModifiedDate = async (projectRoot, pageKey) => {
   const stats = await fs.stat(path.join(projectRoot, pageKey));
   return stats.mtime.toISOString().slice(0, 10);
@@ -595,7 +645,7 @@ export const seoHtmlPlugin = (projectRoot) => ({
     }
 
     if (pageConfig.pageKind === 'home') {
-      return injectHeadJsonLd(nextHtml, buildHomeJsonLd(pageConfig));
+      return injectHeadJsonLd(await preRenderHomePreview(nextHtml, pageConfig), buildHomeJsonLd(pageConfig));
     }
 
     if (pageConfig.pageKind === 'contact') {
