@@ -71,9 +71,9 @@ export const runtimeTranslations = {
     cookieSave: 'Enregistrer',
     cookiePrivacyLink: 'Politique de confidentialité',
     cookieAnalyticsLabel: 'Mesure d’audience',
-    cookieAnalyticsHint: 'Permet de comprendre l’usage du site (Google Analytics, etc.).',
+    cookieAnalyticsHint: 'Permet de comprendre l’usage du site (Microsoft Clarity).',
     cookieMarketingLabel: 'Publicité & personnalisation',
-    cookieMarketingHint: 'Permet des contenus et publicités personnalisés (Google Ads, etc.).',
+    cookieMarketingHint: 'Aucun outil publicitaire n’est utilisé actuellement.',
   },
   en: {
     menuOpen: 'Open menu',
@@ -102,9 +102,9 @@ export const runtimeTranslations = {
     cookieSave: 'Save',
     cookiePrivacyLink: 'Privacy policy',
     cookieAnalyticsLabel: 'Analytics',
-    cookieAnalyticsHint: 'Helps us understand site usage (Google Analytics, etc.).',
+    cookieAnalyticsHint: 'Helps us understand site usage (Microsoft Clarity).',
     cookieMarketingLabel: 'Ads & personalization',
-    cookieMarketingHint: 'Enables personalized content and ads (Google Ads, etc.).',
+    cookieMarketingHint: 'No advertising tool is currently used.',
   },
 };
 

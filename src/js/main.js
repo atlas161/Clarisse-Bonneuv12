@@ -128,16 +128,50 @@ const writeCookieConsent = (consent) => {
   }
 };
 
-const initCookieConsent = () => {
-  const existing = readCookieConsent();
-  if (existing) {
+const clarityProjectId = 'ypwlbronts';
+
+const applyAnalyticsConsent = (granted) => {
+  if (typeof window.clarity === 'function') {
+    window.clarity('consentv2', {
+      ad_Storage: 'denied',
+      analytics_Storage: granted ? 'granted' : 'denied',
+    });
+    if (!granted) {
+      window.clarity('stop');
+    }
     return;
   }
 
-  window.setTimeout(() => {
-    if (readCookieConsent()) {
+  if (!granted) {
+    return;
+  }
+
+  ((c, l, a, r, i) => {
+    c[a] =
+      c[a] ||
+      function clarityQueue(...args) {
+        (c[a].q = c[a].q || []).push(args);
+      };
+    const script = l.createElement(r);
+    script.async = true;
+    script.src = `https://www.clarity.ms/tag/${i}`;
+    l.head.append(script);
+  })(window, document, 'clarity', 'script', clarityProjectId);
+};
+
+const initCookieConsent = () => {
+  const existing = readCookieConsent();
+  if (existing) {
+    applyAnalyticsConsent(existing.analytics);
+  }
+
+  let bannerOpen = false;
+
+  const showBanner = () => {
+    if (bannerOpen) {
       return;
     }
+    bannerOpen = true;
 
     const banner = document.createElement('section');
     banner.className = prefersReducedMotion ? 'cookie-banner' : 'cookie-banner is-entering';
@@ -203,13 +237,25 @@ const initCookieConsent = () => {
 
     const hideBanner = () => {
       banner.classList.add('is-hidden');
-      window.setTimeout(() => banner.remove(), 260);
+      window.setTimeout(() => {
+        banner.remove();
+        bannerOpen = false;
+      }, 260);
     };
 
     const setConsent = (consent) => {
       writeCookieConsent(consent);
+      applyAnalyticsConsent(Boolean(consent.analytics));
       hideBanner();
     };
+
+    const current = readCookieConsent();
+    if (analyticsToggle instanceof HTMLInputElement) {
+      analyticsToggle.checked = Boolean(current?.analytics);
+    }
+    if (marketingToggle instanceof HTMLInputElement) {
+      marketingToggle.checked = Boolean(current?.marketing);
+    }
 
     banner.addEventListener('click', (event) => {
       const target =
@@ -248,7 +294,21 @@ const initCookieConsent = () => {
         });
       }
     });
-  }, cookieBannerDelayMs);
+  };
+
+  document.addEventListener('click', (event) => {
+    if (event.target instanceof Element && event.target.closest('[data-cookie-settings]')) {
+      showBanner();
+    }
+  });
+
+  if (!existing) {
+    window.setTimeout(() => {
+      if (!readCookieConsent()) {
+        showBanner();
+      }
+    }, cookieBannerDelayMs);
+  }
 };
 
 persistLocale(currentLocale);
