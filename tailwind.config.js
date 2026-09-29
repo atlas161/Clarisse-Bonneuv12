@@ -5,6 +5,7 @@ export default {
     './a-propos.html',
     './portfolio.html',
     './contact.html',
+    './polas.html',
     './mentions-legales.html',
     './politique-confidentialite.html',
     './admin.html',

@@ -12,7 +12,7 @@
   --color-text-soft: #d4d4d8;
   --color-text-muted: #a1a1aa;
   --color-accent: #52525b;
-  --color-accent-soft: #71717a;
+  --color-accent-soft: #8e8e98;
   --color-border: rgba(244, 244, 245, 0.12);
   --color-border-strong: rgba(244, 244, 245, 0.2);
   --font-heading: 'Cormorant Garamond', Georgia, serif;
@@ -34,8 +34,13 @@
   display: none !important;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 html {
-  scroll-behavior: smooth;
   background: var(--color-bg);
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -70,6 +75,7 @@ blockquote {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   background:
     radial-gradient(circle at top, rgba(113, 113, 122, 0.14), transparent 0 36%),
     linear-gradient(180deg, #050505 0%, #09090b 48%, #050505 100%);
@@ -96,7 +102,6 @@ body.menu-open {
 
 .page-transition-target {
   transition: opacity 220ms ease, transform 220ms ease;
-  will-change: opacity, transform;
 }
 
 p,
@@ -407,6 +412,7 @@ body.menu-open .site-header {
 
 .hero-section {
   min-height: calc(100vh - var(--header-offset));
+  min-height: calc(100dvh - var(--header-offset));
   display: flex;
   align-items: flex-start;
   padding-top: clamp(1.25rem, 4vw, 2.75rem);
@@ -1044,7 +1050,7 @@ body.menu-open .site-header {
 
 .portfolio-filter-button {
   position: relative;
-  padding: 0;
+  padding: 0.6rem 0;
   border: 0;
   background: transparent;
   color: var(--color-text-muted);
@@ -1058,7 +1064,7 @@ body.menu-open .site-header {
   content: '';
   position: absolute;
   left: 0;
-  bottom: -0.35rem;
+  bottom: 0.2rem;
   width: 100%;
   height: 1px;
   background: rgba(244, 244, 245, 0.85);
@@ -1096,7 +1102,6 @@ body.menu-open .site-header {
 
 .portfolio-item {
   transform-origin: center top;
-  will-change: opacity, transform;
 }
 
 .portfolio-item[hidden] {
@@ -1204,6 +1209,82 @@ body.menu-open .site-header {
   border-color: var(--color-border-strong);
   background: rgba(255, 255, 255, 0.06);
   color: var(--color-text);
+}
+
+.lightbox__nav {
+  position: fixed;
+  top: 50%;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  transform: translateY(-50%);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.72);
+  color: var(--color-text-soft);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.lightbox__nav--prev {
+  left: calc(env(safe-area-inset-left) + 1rem);
+}
+
+.lightbox__nav--next {
+  right: calc(env(safe-area-inset-right) + 1rem);
+}
+
+.lightbox__nav:hover,
+.lightbox__nav:focus-visible {
+  border-color: var(--color-border-strong);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+}
+
+.lightbox__nav:focus-visible,
+.lightbox__close:focus-visible {
+  outline: 2px solid rgba(244, 244, 245, 0.7);
+  outline-offset: 2px;
+}
+
+.lightbox__counter {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  transform: translateX(-50%);
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.72);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767px) {
+  .lightbox__nav {
+    top: auto;
+    bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
+    transform: none;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .lightbox__image,
+  .lightbox__video,
+  .lightbox__embed {
+    max-width: 100%;
+    max-height: 78dvh;
+  }
+
+  .lightbox__embed {
+    width: 100%;
+  }
 }
 
 @media (min-width: 768px) {
@@ -4564,6 +4645,7 @@ body.is-admin-sorting .admin-asset-grid {
 
   [data-mobile-menu] > .container {
     min-height: calc(100vh - var(--header-offset) - 1rem - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.25rem);
+    min-height: calc(100dvh - var(--header-offset) - 1rem - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.25rem);
     display: flex;
     align-items: flex-start;
     justify-content: center;

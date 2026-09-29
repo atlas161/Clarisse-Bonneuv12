@@ -423,7 +423,7 @@ const buildHomeJsonLd = (pageConfig) => {
   const description =
     pageConfig.locale === 'en'
       ? 'Professional portfolio for fashion, beauty and editorial model Clarisse Bonneu.'
-      : 'Portfolio professionnel de Clarisse Bonneu, mannequin mode, beaute et editorial.';
+      : 'Portfolio professionnel de Clarisse Bonneu, mannequin mode, beauté et editorial.';
 
   return [
     {
@@ -441,9 +441,9 @@ const buildHomeJsonLd = (pageConfig) => {
       name: 'Clarisse Bonneu',
       url: toAbsoluteUrl(pageConfig.canonicalPath),
       image: SEO_IMAGE_URL,
-      jobTitle: pageConfig.locale === 'en' ? 'Fashion, beauty and editorial model' : 'Mannequin mode, beaute et editorial',
+      jobTitle: pageConfig.locale === 'en' ? 'Fashion, beauty and editorial model' : 'Mannequin mode, beauté et editorial',
       description,
-      sameAs: ['https://clarissebonneu.book.fr/', 'https://www.instagram.com/clarisse2604b/'],
+      sameAs: ['https://clarissebonneu.book.fr/', 'https://www.instagram.com/bonneu_clarisse'],
     },
   ];
 };

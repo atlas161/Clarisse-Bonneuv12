@@ -4,7 +4,7 @@ import '@fontsource/cormorant-garamond/700.css';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
-import { createIcons, FolderOpen, FolderPlus, FolderSearch, Menu, X } from 'lucide';
+import { ChevronLeft, ChevronRight, createIcons, FolderOpen, FolderPlus, FolderSearch, Menu, X } from 'lucide';
 import {
   getAlternatePath,
   getCurrentLocale,
@@ -13,7 +13,6 @@ import {
   runtimeTranslations,
 } from './i18n.js';
 
-const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 const currentLocale = getCurrentLocale();
 const ui = runtimeTranslations[currentLocale];
 const siteHeader = document.querySelector('.site-header');
@@ -35,6 +34,8 @@ const PORTFOLIO_BROWSER_CACHE_TTL_MS = 15 * 60 * 1000;
 const renderLucideIcons = () => {
   createIcons({
     icons: {
+      ChevronLeft,
+      ChevronRight,
       FolderOpen,
       FolderPlus,
       FolderSearch,
@@ -322,8 +323,11 @@ persistLocale(currentLocale);
 // ---- Navigation active (ARIA) ----
 document.querySelectorAll('[data-nav-link]').forEach((link) => {
   const href = link.getAttribute('href');
-  const normalizedHref = href?.replace(/^\//, '');
-  const isCurrent = normalizedHref === currentPage;
+  const normalize = (path) =>
+    String(path || '/')
+      .replace(/index\.html$/, '')
+      .replace(/\/$/, '') || '/';
+  const isCurrent = normalize(href) === normalize(window.location.pathname);
 
   if (isCurrent) {
     link.setAttribute('aria-current', 'page');
@@ -505,7 +509,7 @@ const initScrollReveal = () => {
 
   const candidates = Array.from(
     contentRoot.querySelectorAll('h1, h2, h3, p, img, .portfolio-card, .hero-media')
-  ).filter((element) => !element.closest('[data-no-reveal]'));
+  ).filter((element) => !element.closest('[data-no-reveal], .hero-section'));
 
   if (candidates.length === 0) {
     return;
@@ -693,7 +697,23 @@ const initLightbox = () => {
   embed.allowFullscreen = true;
   embed.title = ui.lightboxFallbackAlt;
 
-  lightbox.append(closeButton, image, video, embed);
+  const createNavButton = (direction, label) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `lightbox__nav lightbox__nav--${direction}`;
+    button.setAttribute('aria-label', label);
+    button.innerHTML = `<i data-lucide="chevron-${direction === 'prev' ? 'left' : 'right'}" aria-hidden="true"></i>`;
+    return button;
+  };
+
+  const prevButton = createNavButton('prev', ui.lightboxPrev);
+  const nextButton = createNavButton('next', ui.lightboxNext);
+
+  const counter = document.createElement('p');
+  counter.className = 'lightbox__counter';
+  counter.setAttribute('aria-live', 'polite');
+
+  lightbox.append(closeButton, prevButton, nextButton, image, video, embed, counter);
   document.body.append(lightbox);
   renderLucideIcons();
 
@@ -725,7 +745,13 @@ const initLightbox = () => {
     imagePreload.src = href;
   };
 
+  let lastTrigger = null;
+
   const setOpen = (isOpen) => {
+    if (!isOpen && lightbox.classList.contains('is-open') && lastTrigger instanceof HTMLElement) {
+      lastTrigger.focus({ preventScroll: true });
+      lastTrigger = null;
+    }
     lightbox.classList.toggle('is-open', isOpen);
     lightbox.setAttribute('aria-hidden', String(!isOpen));
     body.classList.toggle('menu-open', isOpen);
@@ -739,7 +765,25 @@ const initLightbox = () => {
     }
   };
 
-  const openFromLink = (link) => {
+  // Navigation runs over the cards currently visible (respects active filters).
+  let gallery = [];
+  let galleryIndex = 0;
+
+  const collectGallery = () =>
+    Array.from(document.querySelectorAll(triggerSelector)).filter((element) => !element.closest('[hidden]'));
+
+  const updateNavigation = () => {
+    const total = gallery.length;
+    const multiple = total > 1;
+    prevButton.hidden = !multiple;
+    nextButton.hidden = !multiple;
+    counter.hidden = !multiple;
+    if (multiple) {
+      counter.textContent = ui.lightboxCounter(galleryIndex + 1, total);
+    }
+  };
+
+  const showLink = (link) => {
     const href = link.getAttribute('href');
     if (!href) {
       return;
@@ -779,9 +823,65 @@ const initLightbox = () => {
       image.alt = link.querySelector('img')?.getAttribute('alt') ?? ui.lightboxFallbackAlt;
       image.src = href;
     }
+  };
+
+  const openFromLink = (link) => {
+    gallery = collectGallery();
+    galleryIndex = Math.max(0, gallery.indexOf(link));
+    showLink(link);
+    updateNavigation();
+    lastTrigger = link;
     setOpen(true);
     closeButton.focus();
   };
+
+  const step = (direction) => {
+    if (gallery.length < 2 || !lightbox.classList.contains('is-open')) {
+      return;
+    }
+    galleryIndex = (galleryIndex + direction + gallery.length) % gallery.length;
+    const link = gallery[galleryIndex];
+    showLink(link);
+    updateNavigation();
+    lastTrigger = link;
+    prefetchLinkAsset(gallery[(galleryIndex + 1) % gallery.length]);
+    prefetchLinkAsset(gallery[(galleryIndex - 1 + gallery.length) % gallery.length]);
+  };
+
+  prevButton.addEventListener('click', () => step(-1));
+  nextButton.addEventListener('click', () => step(1));
+
+  // Swipe (touch): horizontal gesture on the stage.
+  let touchStartX = null;
+  let touchStartY = null;
+  lightbox.addEventListener(
+    'touchstart',
+    (event) => {
+      if (event.touches.length !== 1 || event.target === video || event.target === embed) {
+        touchStartX = null;
+        return;
+      }
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+    },
+    { passive: true }
+  );
+  lightbox.addEventListener(
+    'touchend',
+    (event) => {
+      if (touchStartX === null) {
+        return;
+      }
+      const touch = event.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+      touchStartX = null;
+      if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+        step(deltaX < 0 ? 1 : -1);
+      }
+    },
+    { passive: true }
+  );
 
   document.addEventListener('click', (event) => {
     const target = event.target;
@@ -822,8 +922,40 @@ const initLightbox = () => {
   });
 
   window.addEventListener('keydown', (event) => {
+    if (!lightbox.classList.contains('is-open')) {
+      return;
+    }
+
     if (event.key === 'Escape') {
       setOpen(false);
+    } else if ((event.key === 'ArrowRight' || event.key === 'ArrowLeft') && document.activeElement === video) {
+      return;
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      step(1);
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      step(-1);
+    } else if (event.key === 'Tab') {
+      // Keep focus inside the dialog.
+      const focusables = Array.from(lightbox.querySelectorAll('button, video[controls]')).filter(
+        (element) => !element.hidden && !element.closest('[hidden]')
+      );
+      if (focusables.length === 0) {
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (!lightbox.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus();
+      }
     }
   });
 };
