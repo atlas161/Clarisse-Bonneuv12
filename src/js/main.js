@@ -1165,7 +1165,7 @@ const initContactForm = () => {
 
     try {
       const formData = new FormData(form);
-      const response = await fetch('/', {
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -1183,6 +1183,7 @@ const initContactForm = () => {
     } catch (error) {
       setStatus(errorMessage, 'error');
     } finally {
+      window.turnstile?.reset();
       submitButton?.removeAttribute('disabled');
       if (submitButton) {
         submitButton.textContent = defaultButtonLabel;

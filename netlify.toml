@@ -51,6 +51,11 @@ to = "/.netlify/functions/portfolio-api"
 status = 200
 
 [[redirects]]
+from = "/api/contact"
+to = "/.netlify/functions/contact-submit"
+status = 200
+
+[[redirects]]
 from = "/api/admin/session"
 to = "/.netlify/functions/admin-api?route=session"
 status = 200
