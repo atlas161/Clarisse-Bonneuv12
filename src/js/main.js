@@ -1108,7 +1108,17 @@ const initPortfolioFilters = async () => {
   const categoryFiltersData = Array.isArray(payload.filters) ? payload.filters : [];
   const typeFiltersData = Array.isArray(payload.typeFilters) ? payload.typeFilters : [];
 
-  portfolioGrid.replaceChildren(...itemsData.map((item) => createPortfolioItem(item)));
+  // The grid is pre-rendered at build time: keep the existing cards when they already
+  // match the API payload, to avoid re-creating every image (flash / layout shift).
+  const prerenderedHrefs = Array.from(portfolioGrid.children).map((card) => card.getAttribute('href'));
+  const payloadHrefs = itemsData.map((item) => item.lightboxSrc || item.fullSrc);
+  const isPrerenderUpToDate =
+    prerenderedHrefs.length === payloadHrefs.length &&
+    prerenderedHrefs.every((href, index) => href === payloadHrefs[index]);
+
+  if (!isPrerenderUpToDate) {
+    portfolioGrid.replaceChildren(...itemsData.map((item) => createPortfolioItem(item)));
+  }
 
   if (itemsData.length === 0) {
     typeNav.replaceChildren();
