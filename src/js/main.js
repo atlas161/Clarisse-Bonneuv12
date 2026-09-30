@@ -137,7 +137,7 @@ const writeCookieConsent = (consent) => {
 
 const clarityProjectId = 'ypwlbronts';
 
-const applyAnalyticsConsent = (granted) => {
+const applyClarityConsent = (granted) => {
   if (typeof window.clarity === 'function') {
     window.clarity('consentv2', {
       ad_Storage: 'denied',
@@ -166,10 +166,61 @@ const applyAnalyticsConsent = (granted) => {
   })(window, document, 'clarity', 'script', clarityProjectId);
 };
 
+const gtmContainerId = 'GTM-PL53GMHN';
+
+const applyGtmConsent = (consent) => {
+  const analytics = Boolean(consent?.analytics);
+  const marketing = Boolean(consent?.marketing);
+  window.dataLayer = window.dataLayer || [];
+  const gtag = function gtag() {
+    window.dataLayer.push(arguments);
+  };
+
+  if (!analytics && !marketing && !document.querySelector('script[data-gtm]')) {
+    return;
+  }
+
+  const state = {
+    analytics_storage: analytics ? 'granted' : 'denied',
+    ad_storage: marketing ? 'granted' : 'denied',
+    ad_user_data: marketing ? 'granted' : 'denied',
+    ad_personalization: marketing ? 'granted' : 'denied',
+  };
+
+  if (!document.querySelector('script[data-gtm]')) {
+    gtag('consent', 'default', { ...state, wait_for_update: 500 });
+    window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
+    const script = document.createElement('script');
+    script.async = true;
+    script.dataset.gtm = '';
+    script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmContainerId}`;
+    document.head.append(script);
+    return;
+  }
+
+  gtag('consent', 'update', state);
+  if (!analytics && !marketing) {
+    const host = window.location.hostname;
+    document.cookie.split(';').forEach((entry) => {
+      const name = entry.split('=')[0].trim();
+      if (name === '_ga' || name.startsWith('_ga_') || name === '_gid' || name.startsWith('_gcl')) {
+        [host, `.${host}`, `.${host.split('.').slice(-2).join('.')}`].forEach((domain) => {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${domain}`;
+        });
+      }
+    });
+  }
+};
+
+const applyAnalyticsConsent = (consent) => {
+  applyClarityConsent(Boolean(consent?.analytics));
+  applyGtmConsent(consent);
+};
+
 const initCookieConsent = () => {
   const existing = readCookieConsent();
   if (existing) {
-    applyAnalyticsConsent(existing.analytics);
+    applyAnalyticsConsent(existing);
   }
 
   let bannerOpen = false;
@@ -252,7 +303,7 @@ const initCookieConsent = () => {
 
     const setConsent = (consent) => {
       writeCookieConsent(consent);
-      applyAnalyticsConsent(Boolean(consent.analytics));
+      applyAnalyticsConsent(consent);
       hideBanner();
     };
 
